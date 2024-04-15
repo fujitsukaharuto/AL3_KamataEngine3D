@@ -41,9 +41,9 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 
-#ifdef _DEBUG
-
 	Vector2 position = sprite_->GetPosition();
+
+#ifdef _DEBUG
 
 	ImGui::Begin("Debug1");
 	ImGui::Text("Fujituka Haruto %d.%d.%d", 2050, 12, 31);
@@ -54,11 +54,15 @@ void GameScene::Update() {
 	ImGui::SliderFloat("Sprite Position y", &position.y, 0.0f, 300.0f);
 	ImGui::End();
 
-	sprite_->SetPosition(position);
-
 	ImGui::ShowDemoWindow();
 
 #endif // DEBUG
+
+	if (position.x<300) {
+		position.x += 2;
+	}
+
+	sprite_->SetPosition(position);
 
 	if (input_->TriggerKey(DIK_SPACE)) {
 	
