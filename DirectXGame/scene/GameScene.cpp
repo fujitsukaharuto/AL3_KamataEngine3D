@@ -18,7 +18,7 @@ void GameScene::Initialize() {
 
 	viewProject_.Initialize();
 
-	playerTextureHandle_ = TextureManager::Load("cube/cube.jpg");
+	playerTextureHandle_ = TextureManager::Load("human.png");
 	playerModel_ = Model::Create();
 
 	player_ = new Player();
