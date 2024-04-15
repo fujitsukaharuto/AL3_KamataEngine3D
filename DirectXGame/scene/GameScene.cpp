@@ -32,6 +32,7 @@ void GameScene::Initialize() {
 	voiceHandle_ = audio_->PlayWave(soundDataHandle_, true);
 
 	debugCamera_ = new DebugCamera(1280, 720);
+	isDebugCamera_ = false;
 	AxisIndicator::GetInstance()->SetVisible(true);
 	AxisIndicator::GetInstance()->SetTargetViewProjection(&debugCamera_->GetViewProjection());
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&debugCamera_->GetViewProjection());
@@ -40,16 +41,18 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 
-	/*Vector2 position = sprite_->GetPosition();
-	position.x += 2.0f;
-	position.y += 1.0f;
-	sprite_->SetPosition(position);*/
+	Vector2 position = sprite_->GetPosition();
 
 	ImGui::Begin("Debug1");
 	ImGui::Text("Fujituka Haruto %d.%d.%d", 2050, 12, 31);
-	ImGui::InputFloat3("InputFloat3", inputFloat3);
-	ImGui::SliderFloat3("SliderFloat3", inputFloat3, 0.0f, 1.0f);
+	ImGui::Checkbox("debug Camera", &isDebugCamera_);
+	//ImGui::InputFloat("Sprite Position x", &position.x);
+	//ImGui::InputFloat("Sprite Position y", &position.y);
+	ImGui::SliderFloat("Sprite Position x", &position.x,0.0f,300.0f);
+	ImGui::SliderFloat("Sprite Position y", &position.y,0.0f,300.0f);
 	ImGui::End();
+
+	sprite_->SetPosition(position);
 
 	ImGui::ShowDemoWindow();
 
@@ -59,7 +62,9 @@ void GameScene::Update() {
 
 	}
 
-	debugCamera_->Update();
+	if (isDebugCamera_) {
+		debugCamera_->Update();
+	}
 
 }
 
@@ -97,9 +102,9 @@ void GameScene::Draw() {
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
 
-	for (int x = -50; x < 50;) {
+	for (int x = -50; x <= 50;) {
 		PrimitiveDrawer::GetInstance()->DrawLine3d({static_cast<float>(x), 0, -50}, {static_cast<float>(x), 0, 50}, {1.0f, 0.0f, 0.0f, 1.0f});
-		PrimitiveDrawer::GetInstance()->DrawLine3d({-50, 0, static_cast<float>(x)}, {50, 0, static_cast<float>(x)}, {0.0f, 1.0f, 0.0f, 1.0f});
+		PrimitiveDrawer::GetInstance()->DrawLine3d({-50, 0, static_cast<float>(x)}, {50, 0, static_cast<float>(x)}, {0.0f, 0.0f, 1.0f, 1.0f});
 		x += 10;
 	}
 

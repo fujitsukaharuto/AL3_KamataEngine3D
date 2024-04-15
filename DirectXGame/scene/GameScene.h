@@ -55,9 +55,8 @@ private: // メンバ変数
 	uint32_t soundDataHandle_ = 0;
 	uint32_t voiceHandle_ = 0;
 
-	float inputFloat3[3] = {0, 0, 0};
-
 	DebugCamera* debugCamera_ = nullptr;
+	bool isDebugCamera_ = false;
 
 	/// <summary>
 	/// ゲームシーン用
