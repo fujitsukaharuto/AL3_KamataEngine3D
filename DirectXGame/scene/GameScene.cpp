@@ -32,7 +32,7 @@ void GameScene::Initialize() {
 	voiceHandle_ = audio_->PlayWave(soundDataHandle_, true);
 
 	debugCamera_ = new DebugCamera(1280, 720);
-	isDebugCamera_ = false;
+	isDebugCamera_ = true;
 	AxisIndicator::GetInstance()->SetVisible(true);
 	AxisIndicator::GetInstance()->SetTargetViewProjection(&debugCamera_->GetViewProjection());
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&debugCamera_->GetViewProjection());
@@ -41,20 +41,24 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 
+#ifdef _DEBUG
+
 	Vector2 position = sprite_->GetPosition();
 
 	ImGui::Begin("Debug1");
 	ImGui::Text("Fujituka Haruto %d.%d.%d", 2050, 12, 31);
 	ImGui::Checkbox("debug Camera", &isDebugCamera_);
-	//ImGui::InputFloat("Sprite Position x", &position.x);
-	//ImGui::InputFloat("Sprite Position y", &position.y);
-	ImGui::SliderFloat("Sprite Position x", &position.x,0.0f,300.0f);
-	ImGui::SliderFloat("Sprite Position y", &position.y,0.0f,300.0f);
+	// ImGui::InputFloat("Sprite Position x", &position.x);
+	// ImGui::InputFloat("Sprite Position y", &position.y);
+	ImGui::SliderFloat("Sprite Position x", &position.x, 0.0f, 300.0f);
+	ImGui::SliderFloat("Sprite Position y", &position.y, 0.0f, 300.0f);
 	ImGui::End();
 
 	sprite_->SetPosition(position);
 
 	ImGui::ShowDemoWindow();
+
+#endif // DEBUG
 
 	if (input_->TriggerKey(DIK_SPACE)) {
 	
