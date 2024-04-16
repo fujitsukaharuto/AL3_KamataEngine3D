@@ -5,6 +5,12 @@
 
 class Enemy {
 public:
+
+	enum class Phase {
+		Approach, // 接近
+		Leave,    // 離脱
+	};
+
 	Enemy();
 	~Enemy();
 
@@ -26,11 +32,22 @@ public:
 	/// <param name="viewProjection">ビュープロジェクション（参照渡し）</param>
 	void Draw(ViewProjection& viewProjection);
 
+	/// <summary>
+	/// 接近処理
+	/// </summary>
+	void ApproachMove();
+
+	/// <summary>
+	/// 離脱処理
+	/// </summary>
+	void LeaveMove();
 
 private:
 
 	WorldTransform worldTransform_;
 	Model* model_ = nullptr;
 	uint32_t textureHandle_ = 0u;
+
+	Phase phase_ = Phase::Approach;
 
 };
