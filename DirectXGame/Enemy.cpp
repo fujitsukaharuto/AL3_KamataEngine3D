@@ -11,7 +11,7 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle)
 	model_ = model;
 	textureHandle_ = textureHandle;
 	worldTransform_.Initialize();
-	worldTransform_.translation_ = {0.0f, 3.0f, 10.0f};
+	worldTransform_.translation_ = {0.0f, 3.0f, 20.0f};
 
 }
 
