@@ -3,6 +3,7 @@
 #include "Input.h"
 #include "WorldTransform.h"
 #include "PlayerBullet.h"
+#include <list>
 
 class Player {
 public:
@@ -49,6 +50,6 @@ private:
 	uint32_t textureHandle_ = 0u;
 
 	Input* input_ = nullptr;
-	PlayerBullet* bullet_ = nullptr;
+	std::list<PlayerBullet*> bullets_;
 
 };
