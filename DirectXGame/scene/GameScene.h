@@ -10,6 +10,7 @@
 #include "DebugCamera.h"
 
 #include "Player.h"
+#include "Enemy.h"
 
 /// <summary>
 /// ゲームシーン
@@ -56,6 +57,9 @@ private: // メンバ変数
 	Model* playerModel_ = nullptr;
 
 	Player* player_ = nullptr;
+
+	uint32_t enemyTextureHandle_ = 0;
+	Enemy* enemy_ = nullptr;
 
 	/// <summary>
 	/// ゲームシーン用

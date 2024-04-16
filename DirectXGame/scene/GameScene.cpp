@@ -9,6 +9,7 @@ GameScene::~GameScene()
 { 
 	delete playerModel_; 
 	delete player_;
+	delete enemy_;
 	delete debugCamera_;
 }
 
@@ -30,11 +31,20 @@ void GameScene::Initialize() {
 	player_ = new Player();
 	player_->Initialize(playerModel_, playerTextureHandle_);
 
+	enemyTextureHandle_ = TextureManager::Load("virus_character.png");
+	enemy_ = new Enemy();
+	enemy_->Initialize(playerModel_, enemyTextureHandle_);
+
 }
 
 void GameScene::Update() {
 
 	player_->Update();
+
+	if (enemy_) {
+		enemy_->Update();
+	}
+
 #ifdef _DEBUG
 	if (input_->TriggerKey(DIK_F12)) {
 		if (!isDEbugCameraActive_) {
@@ -83,6 +93,9 @@ void GameScene::Draw() {
 	/// </summary>
 
 	player_->Draw(viewProject_);
+	if (enemy_) {
+		enemy_->Draw(viewProject_);
+	}
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
