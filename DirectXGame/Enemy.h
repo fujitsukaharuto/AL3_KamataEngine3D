@@ -50,4 +50,7 @@ private:
 
 	Phase phase_ = Phase::Approach;
 
+	static void (Enemy::*pPhaseTable[])();
+
+
 };

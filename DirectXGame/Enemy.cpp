@@ -12,21 +12,30 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle)
 	textureHandle_ = textureHandle;
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = {0.0f, 3.0f, 30.0f};
-
+	
 }
+
+void (Enemy::*Enemy::pPhaseTable[])() = {
+    &Enemy::ApproachMove,
+	&Enemy::LeaveMove
+};
 
 void Enemy::Update()
 {
 
-	switch (phase_) {
-	case Enemy::Phase::Approach:
-	default:
-		ApproachMove();
-		break;
-	case Enemy::Phase::Leave:
-		LeaveMove();
-		break;
-	}
+	(this->*pPhaseTable[static_cast<size_t>(phase_)])();
+
+	//switch (phase_) {
+	//case Enemy::Phase::Approach:
+	//default:
+	//	ApproachMove();
+	//	break;
+	//case Enemy::Phase::Leave:
+	//	LeaveMove();
+	//	break;
+	//}
+
+	worldTransform_.UpdateMatrix();
 
 }
 
@@ -49,7 +58,7 @@ void Enemy::ApproachMove()
 	}
 
 	worldTransform_.translation_ += move;
-	worldTransform_.UpdateMatrix();
+
 }
 
 void Enemy::LeaveMove()
@@ -60,5 +69,5 @@ void Enemy::LeaveMove()
 	const Vector3 kLeaveSpeed{-kSpeed, kSpeed, 0.0f};
 	move += kLeaveSpeed;
 	worldTransform_.translation_ += move;
-	worldTransform_.UpdateMatrix();
+
 }
