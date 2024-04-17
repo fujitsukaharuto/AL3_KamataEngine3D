@@ -1,6 +1,8 @@
 #pragma once
 #include "Model.h"
 #include "WorldTransform.h"
+#include "EnemyBullet.h"
+#include <list>
 
 
 class Enemy {
@@ -42,6 +44,11 @@ public:
 	/// </summary>
 	void LeaveMove();
 
+	/// <summary>
+	/// 弾発射
+	/// </summary>
+	void Fire();
+
 private:
 
 	WorldTransform worldTransform_;
@@ -51,6 +58,8 @@ private:
 	Phase phase_ = Phase::Approach;
 
 	static void (Enemy::*pPhaseTable[])();
-
+	std::list<EnemyBullet*> bullets_;
+	static const int32_t kFireTime = 60 * 1;
+	int32_t fireTimer_ = kFireTime;
 
 };
