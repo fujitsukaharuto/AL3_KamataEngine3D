@@ -1,4 +1,6 @@
 #include "Enemy.h"
+#include "EnemyStateApproach.h"
+#include "EnemyStateLeave.h"
 #include <cassert>
 
 Enemy::Enemy() {}
@@ -13,6 +15,8 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle)
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = {0.0f, 3.0f, 30.0f};
 	
+	ChangeState(std::make_unique<EnemyStateApproach>(this));
+
 }
 
 void (Enemy::*Enemy::pPhaseTable[])() = {
@@ -23,7 +27,9 @@ void (Enemy::*Enemy::pPhaseTable[])() = {
 void Enemy::Update()
 {
 
-	(this->*pPhaseTable[static_cast<size_t>(phase_)])();
+	state_->Update();
+
+	/*(this->*pPhaseTable[static_cast<size_t>(phase_)])();*/
 
 	//switch (phase_) {
 	//case Enemy::Phase::Approach:
@@ -69,5 +75,20 @@ void Enemy::LeaveMove()
 	const Vector3 kLeaveSpeed{-kSpeed, kSpeed, 0.0f};
 	move += kLeaveSpeed;
 	worldTransform_.translation_ += move;
+
+}
+
+void Enemy::StateMove(const Vector3& v)
+{
+
+	Vector3 move = v;
+	worldTransform_.translation_ += move;
+
+}
+
+void Enemy::ChangeState(std::unique_ptr<BaseEnemyState> state)
+{
+
+	state_ = std::move(state);
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "Model.h"
 #include "WorldTransform.h"
+#include "BaseEnemyState.h"
 
 
 class Enemy {
@@ -42,6 +43,12 @@ public:
 	/// </summary>
 	void LeaveMove();
 
+	void StateMove(const Vector3& v);
+
+	Vector3 GetPosition() const { return worldTransform_.translation_; }
+
+	void ChangeState(std::unique_ptr<BaseEnemyState> state);
+
 private:
 
 	WorldTransform worldTransform_;
@@ -52,5 +59,6 @@ private:
 
 	static void (Enemy::*pPhaseTable[])();
 
+	std::unique_ptr<BaseEnemyState> state_;
 
 };

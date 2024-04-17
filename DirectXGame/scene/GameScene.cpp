@@ -62,7 +62,7 @@ void GameScene::Update() {
 	} else {
 		viewProject_.UpdateMatrix();
 	}
-	
+
 }
 
 void GameScene::Draw() {
