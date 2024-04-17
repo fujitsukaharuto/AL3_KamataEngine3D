@@ -49,6 +49,11 @@ public:
 	/// </summary>
 	void Fire();
 
+	/// <summary>
+	/// 接近フェーズ初期化
+	/// </summary>
+	void InitApproach();
+
 private:
 
 	WorldTransform worldTransform_;
@@ -59,7 +64,7 @@ private:
 
 	static void (Enemy::*pPhaseTable[])();
 	std::list<EnemyBullet*> bullets_;
-	static const int32_t kFireTime = 60 * 1;
+	static const int32_t kFireTime = 60;
 	int32_t fireTimer_ = kFireTime;
 
 };

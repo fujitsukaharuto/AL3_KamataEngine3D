@@ -22,6 +22,8 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle)
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = {3.0f, 3.0f, 40.0f};
 	
+	InitApproach();
+
 }
 
 void (Enemy::*Enemy::pPhaseTable[])() = {
@@ -46,7 +48,11 @@ void Enemy::Update()
 
 	worldTransform_.UpdateMatrix();
 
-	Fire();
+	if (--fireTimer_ <= 0) {
+		Fire();
+		fireTimer_ = kFireTime;
+	}
+	
 	for (EnemyBullet* bullet : bullets_) {
 		bullet->Update();
 	}
@@ -91,15 +97,20 @@ void Enemy::LeaveMove()
 
 void Enemy::Fire()
 {
-	if (--fireTimer_<=0) {
-		const float kBulletSpeed = 1.0f;
-		Vector3 velocity(0, 0, -kBulletSpeed);
-		velocity = TransformNormal(velocity, worldTransform_.matWorld_);
 
-		EnemyBullet* newBullet = new EnemyBullet();
-		newBullet->Initialize(model_, worldTransform_.translation_, velocity);
-		bullets_.push_back(newBullet);
-		fireTimer_ = kFireTime;
-	}
+	const float kBulletSpeed = 1.0f;
+	Vector3 velocity(0, 0, -kBulletSpeed);
+	velocity = TransformNormal(velocity, worldTransform_.matWorld_);
+
+	EnemyBullet* newBullet = new EnemyBullet();
+	newBullet->Initialize(model_, worldTransform_.translation_, velocity);
+	bullets_.push_back(newBullet);
+
+}
+
+void Enemy::InitApproach() 
+{
+
+	fireTimer_ = 0;
 
 }
