@@ -34,6 +34,14 @@ void (Enemy::*Enemy::pPhaseTable[])() = {
 void Enemy::Update()
 {
 
+	bullets_.remove_if([](EnemyBullet* enemyBullet) {
+		if (enemyBullet->IsDead()) {
+			delete enemyBullet;
+			return true;
+		}
+		return false;
+	});
+
 	(this->*pPhaseTable[static_cast<size_t>(phase_)])();
 
 	//switch (phase_) {
