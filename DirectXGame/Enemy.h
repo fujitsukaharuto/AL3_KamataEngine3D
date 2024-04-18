@@ -6,6 +6,9 @@
 #include <list>
 
 
+class Player;
+
+
 class Enemy {
 public:
 
@@ -60,6 +63,10 @@ public:
 	/// </summary>
 	void InitApproach();
 
+	void SetPlayer(Player* player) { player_ = player; }
+
+	Vector3 GetWorldPosition();
+
 private:
 
 	WorldTransform worldTransform_;
@@ -74,5 +81,6 @@ private:
 	int32_t fireTimer_ = kFireTime;
 
 	std::list<TimedCall*> timedCalls_;
+	Player* player_;
 
 };

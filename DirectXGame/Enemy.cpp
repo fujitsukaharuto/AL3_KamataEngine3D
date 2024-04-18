@@ -2,6 +2,7 @@
 #include <cassert>
 
 #include "MathCal.h"
+#include "Player.h"
 
 Enemy::Enemy() {}
 
@@ -25,8 +26,9 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle)
 	textureHandle_ = textureHandle;
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = {3.0f, 3.0f, 40.0f};
-	
-	InitApproach();
+	worldTransform_.UpdateMatrix();
+
+	/*InitApproach();*/
 
 }
 
@@ -40,6 +42,14 @@ void Enemy::Update()
 	timedCalls_.remove_if([](TimedCall* timedcall) {
 		if (timedcall->IsFinished()) {
 			delete timedcall;
+			return true;
+		}
+		return false;
+	});
+
+	bullets_.remove_if([](EnemyBullet* enemyBullet) {
+		if (enemyBullet->IsDead()) {
+			delete enemyBullet;
 			return true;
 		}
 		return false;
@@ -116,8 +126,15 @@ void Enemy::Fire()
 {
 
 	const float kBulletSpeed = 1.0f;
-	Vector3 velocity(0, 0, -kBulletSpeed);
-	velocity = TransformNormal(velocity, worldTransform_.matWorld_);
+
+	Vector3 playerPos = player_->GetworldPosition();
+	Vector3 enemyPos = GetWorldPosition();
+	Vector3 bulletDire = playerPos - enemyPos;
+	Vector3 velocity = bulletDire.Normalize();
+	velocity = velocity * kBulletSpeed;
+
+	//Vector3 velocity(0, 0, -kBulletSpeed);
+	//velocity = TransformNormal(velocity, worldTransform_.matWorld_);
 
 	EnemyBullet* newBullet = new EnemyBullet();
 	newBullet->Initialize(model_, worldTransform_.translation_, velocity);
@@ -136,7 +153,17 @@ void Enemy::FireRoop()
 void Enemy::InitApproach() 
 {
 
-	fireTimer_ = 0;
+	fireTimer_ = 10;
 	FireRoop();
 
+}
+
+Vector3 Enemy::GetWorldPosition()
+{
+	Vector3 worldPos;
+	worldPos.x = worldTransform_.matWorld_.m[3][0];
+	worldPos.y = worldTransform_.matWorld_.m[3][1];
+	worldPos.z = worldTransform_.matWorld_.m[3][2];
+
+	return worldPos;
 }

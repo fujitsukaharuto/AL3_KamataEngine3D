@@ -43,6 +43,8 @@ public:
 	/// </summary>
 	void Attack();
 
+	Vector3 GetworldPosition();
+
 private:
 
 	WorldTransform worldTransform_;

@@ -34,6 +34,8 @@ void GameScene::Initialize() {
 	enemyTextureHandle_ = TextureManager::Load("virus_character.png");
 	enemy_ = new Enemy();
 	enemy_->Initialize(playerModel_, enemyTextureHandle_);
+	enemy_->SetPlayer(player_);
+	enemy_->InitApproach();
 
 }
 
