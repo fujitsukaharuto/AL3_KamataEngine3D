@@ -2,6 +2,7 @@
 #include "Model.h"
 #include "WorldTransform.h"
 #include "EnemyBullet.h"
+#include "TimedCall.h"
 #include <list>
 
 
@@ -50,6 +51,11 @@ public:
 	void Fire();
 
 	/// <summary>
+	/// 弾発射してタイマーリセット
+	/// </summary>
+	void FireRoop();
+
+	/// <summary>
 	/// 接近フェーズ初期化
 	/// </summary>
 	void InitApproach();
@@ -66,5 +72,7 @@ private:
 	std::list<EnemyBullet*> bullets_;
 	static const int32_t kFireTime = 60;
 	int32_t fireTimer_ = kFireTime;
+
+	std::list<TimedCall*> timedCalls_;
 
 };

@@ -8,6 +8,10 @@ Enemy::Enemy() {}
 Enemy::~Enemy()
 {
 
+	for (TimedCall* timedcal : timedCalls_) {
+		delete timedcal;
+	}
+
 	for (EnemyBullet* bullet : bullets_) {
 		delete bullet;
 	}
@@ -33,6 +37,14 @@ void (Enemy::*Enemy::pPhaseTable[])() = {
 
 void Enemy::Update()
 {
+	timedCalls_.remove_if([](TimedCall* timedcall) {
+		if (timedcall->IsFinished()) {
+			delete timedcall;
+			return true;
+		}
+		return false;
+	});
+
 
 	(this->*pPhaseTable[static_cast<size_t>(phase_)])();
 
@@ -48,11 +60,15 @@ void Enemy::Update()
 
 	worldTransform_.UpdateMatrix();
 
-	if (--fireTimer_ <= 0) {
-		Fire();
-		fireTimer_ = kFireTime;
-	}
+	//if (--fireTimer_ <= 0) {
+	//	Fire();
+	//	fireTimer_ = kFireTime;
+	//}
 	
+	for (TimedCall* timedcal : timedCalls_) {
+		timedcal->Update();
+	}
+
 	for (EnemyBullet* bullet : bullets_) {
 		bullet->Update();
 	}
@@ -76,9 +92,10 @@ void Enemy::ApproachMove()
 	const float kApproachSpeedZ = 0.2f;
 	const Vector3 kApproachSpeed{0.0f, 0.0f, -kApproachSpeedZ};
 	move += kApproachSpeed;
-	/*if (worldTransform_.translation_.z<0.0f) {
-		phase_ = Phase::Leave;
-	}*/
+	//if (worldTransform_.translation_.z<0.0f) {
+	//	phase_ = Phase::Leave;
+	//	timedCalls_.clear();
+	//}
 
 	worldTransform_.translation_ += move;
 
@@ -108,9 +125,18 @@ void Enemy::Fire()
 
 }
 
+void Enemy::FireRoop()
+{
+
+	Fire();
+	timedCalls_.push_back(new TimedCall(std::bind(&Enemy::FireRoop, this), 60));
+
+}
+
 void Enemy::InitApproach() 
 {
 
 	fireTimer_ = 0;
+	FireRoop();
 
 }
