@@ -127,6 +127,9 @@ Vector3 Leap(const Vector3& v1, const Vector3& v2, float t)
 
 Vector3 Sleap(const Vector3& v1, const Vector3& v2, float t)
 {
+	if (v1==v2) {
+		return v1;
+	}
 	float dot = v1 * v2;
 	dot = std::max(-1.0f, std::min(1.0f, dot));
 	float theta = std::acosf(dot);

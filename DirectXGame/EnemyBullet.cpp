@@ -35,7 +35,7 @@ void EnemyBullet::Update()
 	Vector3 norToPlayer = toPlayer.Normalize();
 	Vector3 norVelocity = velocity_.Normalize();
 
-	velocity_ = Sleap(norVelocity, norToPlayer, 0.05f) * 1.0f;
+	velocity_ = Sleap(norVelocity, norToPlayer, 0.025f) * 1.0f;
 
 	worldTransform_.rotation_.y = std::atan2(velocity_.x, velocity_.z);
 	Matrix4x4 yrota = MakeRotateYMatrix(-worldTransform_.rotation_.y);
@@ -69,3 +69,5 @@ Vector3 EnemyBullet::GetWorldPos()
 
 	return worldPos;
 }
+
+void EnemyBullet::OnCollision() { isDead_ = true; }

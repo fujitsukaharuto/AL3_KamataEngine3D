@@ -32,6 +32,8 @@ public:
 	void SetPlayer(Player* player) { player_ = player; }
 	Vector3 GetWorldPos();
 
+	void OnCollision();
+
 private:
 	WorldTransform worldTransform_;
 	Model* model_ = nullptr;

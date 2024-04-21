@@ -47,6 +47,8 @@ void GameScene::Update() {
 		enemy_->Update();
 	}
 
+	CheckAllCollision();
+
 #ifdef _DEBUG
 	if (input_->TriggerKey(DIK_F12)) {
 		if (!isDEbugCameraActive_) {
@@ -115,4 +117,58 @@ void GameScene::Draw() {
 	Sprite::PostDraw();
 
 #pragma endregion
+}
+
+void GameScene::CheckAllCollision()
+{
+
+	Vector3 posA, posB;
+
+	const std::list<PlayerBullet*>& playerBullets = player_->GetBullets();
+	const std::list<EnemyBullet*>& enemyBullets = enemy_->GetBullets();
+
+#pragma region 自キャラと敵弾の当たり判定
+	posA = player_->GetworldPosition();
+
+	for (EnemyBullet* bullet : enemyBullets) {
+		posB = bullet->GetWorldPos();
+		Vector3 leng = posB - posA;
+		float length = leng.Lenght();
+		if (length<=3.0f) {
+			player_->OnCollision();
+			bullet->OnCollision();
+		}
+	}
+#pragma endregion
+
+#pragma region 敵キャラと自弾の当たり判定
+	posA = enemy_->GetWorldPosition();
+
+	for (PlayerBullet* bullet : playerBullets) {
+		posB = bullet->GetWorldPos();
+		Vector3 leng = posB - posA;
+		float length = leng.Lenght();
+		if (length <= 3.0f) {
+			enemy_->OnCollision();
+			bullet->OnCollision();
+		}
+	}
+#pragma endregion
+
+#pragma region 敵弾と自弾の当たり判定
+
+	for (PlayerBullet* bullet : playerBullets) {
+		posA = bullet->GetWorldPos();
+		for (EnemyBullet* enemybullet : enemyBullets) {
+			posB = enemybullet->GetWorldPos();
+			Vector3 leng = posB - posA;
+			float length = leng.Lenght();
+			if (length <= 3.0f) {
+				enemybullet->OnCollision();
+				bullet->OnCollision();
+			}
+		}
+	}
+#pragma endregion
+
 }
