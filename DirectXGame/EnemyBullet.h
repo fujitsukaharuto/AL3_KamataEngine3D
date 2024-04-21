@@ -2,6 +2,8 @@
 #include "Model.h"
 #include "WorldTransform.h"
 
+class Player; 
+
 class EnemyBullet {
 public:
 	EnemyBullet();
@@ -27,6 +29,9 @@ public:
 
 	bool IsDead() const { return isDead_; }
 
+	void SetPlayer(Player* player) { player_ = player; }
+	Vector3 GetWorldPos();
+
 private:
 	WorldTransform worldTransform_;
 	Model* model_ = nullptr;
@@ -36,4 +41,5 @@ private:
 	static const int32_t kLifeTime = 60 * 5;
 	int32_t deathTimer_ = kLifeTime;
 	bool isDead_ = false;
+	Player* player_;
 };

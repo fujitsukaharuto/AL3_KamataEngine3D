@@ -115,3 +115,28 @@ Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m) {
 		
 		return result;
 }
+
+Vector3 Leap(const Vector3& v1, const Vector3& v2, float t)
+{
+	Vector3 result;
+	result = v1 + (v2 - v1) * t;
+	return result;
+}
+
+Vector3 Sleap(const Vector3& v1, const Vector3& v2, float t)
+{
+	float dot = v1 * v2;
+	dot = std::max(-1.0f, std::min(1.0f, dot));
+	float theta = std::acosf(dot);
+
+	float sinTheta = std::sinf(theta);
+	Vector3 newVec = v1;
+	if (sinTheta!=0.0f) {
+		float w1 = std::sinf((1 - t) * theta) / sinTheta;
+		float w2 = std::sinf(t * theta) / sinTheta;
+		newVec = v1 * w1 + v2 * w2;
+	}
+
+	newVec = newVec.Normalize();
+	return newVec;
+}
