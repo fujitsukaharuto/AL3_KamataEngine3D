@@ -116,6 +116,8 @@ Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m) {
 		return result;
 }
 
+float Lerp(float v1, float v2, float t) { return (1.0f - t) * v1 + t * v2; }
+
 Vector3 Leap(const Vector3& v1, const Vector3& v2, float t)
 {
 	Vector3 result;
@@ -137,6 +139,10 @@ Vector3 Sleap(const Vector3& v1, const Vector3& v2, float t)
 		newVec = v1 * w1 + v2 * w2;
 	}
 
-	newVec = newVec.Normalize();
-	return newVec;
+	float length1 = v1.Lenght();
+	float length2 = v2.Lenght();
+
+	float lenrth = Lerp(length1, length2, t);
+
+	return newVec * lenrth;
 }

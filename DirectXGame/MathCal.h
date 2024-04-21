@@ -22,6 +22,8 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rot, const Vecto
 
 Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m);
 
+float Lerp(float v1, float v2, float t);
+
 Vector3 Leap(const Vector3& v1, const Vector3& v2, float t);
 
 Vector3 Sleap(const Vector3& v1, const Vector3& v2, float t);
