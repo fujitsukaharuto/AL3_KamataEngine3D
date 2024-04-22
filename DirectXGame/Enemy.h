@@ -3,13 +3,14 @@
 #include "WorldTransform.h"
 #include "EnemyBullet.h"
 #include "TimedCall.h"
+#include "Collider.h"
 #include <list>
 
 
 class Player;
 
 
-class Enemy {
+class Enemy :public Collider{
 public:
 
 	enum class Phase {
@@ -65,9 +66,9 @@ public:
 
 	void SetPlayer(Player* player) { player_ = player; }
 
-	Vector3 GetWorldPosition();
+	Vector3 GetWorldPosition() override;
 
-	void OnCollision();
+	void OnCollision() override;
 
 	const std::list<EnemyBullet*>& GetBullets() const { return bullets_; }
 

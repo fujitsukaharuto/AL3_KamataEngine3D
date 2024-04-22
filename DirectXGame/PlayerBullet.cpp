@@ -37,8 +37,7 @@ void PlayerBullet::Draw(const ViewProjection& viewProjection)
 
 }
 
-Vector3 PlayerBullet::GetWorldPos()
-{
+Vector3 PlayerBullet::GetWorldPosition() {
 	Vector3 worldPos;
 	worldPos.x = worldTransform_.matWorld_.m[3][0];
 	worldPos.y = worldTransform_.matWorld_.m[3][1];

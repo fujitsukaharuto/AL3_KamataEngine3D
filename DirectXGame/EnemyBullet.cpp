@@ -31,7 +31,7 @@ void EnemyBullet::Initialize(Model* model, const Vector3& position, const Vector
 
 void EnemyBullet::Update()
 {
-	Vector3 toPlayer = player_->GetworldPosition() - GetWorldPos();
+	Vector3 toPlayer = player_->GetWorldPosition() - GetWorldPosition();
 	Vector3 norToPlayer = toPlayer.Normalize();
 	Vector3 norVelocity = velocity_.Normalize();
 
@@ -60,8 +60,7 @@ void EnemyBullet::Draw(const ViewProjection& viewProjection)
 
 }
 
-Vector3 EnemyBullet::GetWorldPos()
-{
+Vector3 EnemyBullet::GetWorldPosition() {
 	Vector3 worldPos;
 	worldPos.x = worldTransform_.matWorld_.m[3][0];
 	worldPos.y = worldTransform_.matWorld_.m[3][1];

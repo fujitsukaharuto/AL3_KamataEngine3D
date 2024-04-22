@@ -127,7 +127,7 @@ void Enemy::Fire()
 
 	const float kBulletSpeed = 1.0f;
 
-	Vector3 playerPos = player_->GetworldPosition();
+	Vector3 playerPos = player_->GetWorldPosition();
 	Vector3 enemyPos = GetWorldPosition();
 	Vector3 bulletDire = playerPos - enemyPos;
 	Vector3 velocity = bulletDire.Normalize();

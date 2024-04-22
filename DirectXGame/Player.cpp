@@ -108,8 +108,7 @@ void Player::Attack()
 	}
 }
 
-Vector3 Player::GetworldPosition()
-{
+Vector3 Player::GetWorldPosition() {
 	Vector3 worldPos;
 	worldPos.x = worldTransform_.matWorld_.m[3][0];
 	worldPos.y = worldTransform_.matWorld_.m[3][1];

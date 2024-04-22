@@ -3,9 +3,10 @@
 #include "Input.h"
 #include "WorldTransform.h"
 #include "PlayerBullet.h"
+#include "Collider.h"
 #include <list>
 
-class Player {
+class Player :public Collider {
 public:
 	Player();
 	~Player();
@@ -43,9 +44,9 @@ public:
 	/// </summary>
 	void Attack();
 
-	Vector3 GetworldPosition();
+	Vector3 GetWorldPosition() override;
 
-	void OnCollision();
+	void OnCollision() override;
 
 	const std::list<PlayerBullet*>& GetBullets() const { return bullets_; }
 

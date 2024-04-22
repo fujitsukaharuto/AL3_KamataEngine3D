@@ -11,6 +11,7 @@
 
 #include "Player.h"
 #include "Enemy.h"
+#include "Collider.h"
 
 /// <summary>
 /// ゲームシーン
@@ -65,6 +66,13 @@ private: // メンバ変数
 
 	uint32_t enemyTextureHandle_ = 0;
 	Enemy* enemy_ = nullptr;
+
+	/// <summary>
+	/// コライダー２つの衝突判定
+	/// </summary>
+	/// <param name="colliderA">コライダーA</param>
+	/// <param name="colliderB">コライダーB</param>
+	void CheckCollisionPair(Collider* colliderA, Collider* colliderB);
 
 	/// <summary>
 	/// ゲームシーン用

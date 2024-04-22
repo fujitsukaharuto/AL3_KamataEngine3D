@@ -122,45 +122,58 @@ void GameScene::Draw() {
 void GameScene::CheckAllCollision()
 {
 
-	Vector3 posA, posB;
+	//Vector3 posA, posB;
 
 	const std::list<PlayerBullet*>& playerBullets = player_->GetBullets();
 	const std::list<EnemyBullet*>& enemyBullets = enemy_->GetBullets();
 
 #pragma region 自キャラと敵弾の当たり判定
-	posA = player_->GetworldPosition();
+	/*posA = player_->GetWorldPosition();
 
 	for (EnemyBullet* bullet : enemyBullets) {
-		posB = bullet->GetWorldPos();
+		posB = bullet->GetWorldPosition();
 		Vector3 leng = posB - posA;
 		float length = leng.Lenght();
 		if (length<=3.0f) {
 			player_->OnCollision();
 			bullet->OnCollision();
 		}
+	}*/
+
+	for (EnemyBullet* enemyBullet : enemyBullets) {
+	
+		CheckCollisionPair(player_, enemyBullet);
+	
 	}
+
 #pragma endregion
 
 #pragma region 敵キャラと自弾の当たり判定
-	posA = enemy_->GetWorldPosition();
+	/*posA = enemy_->GetWorldPosition();
 
 	for (PlayerBullet* bullet : playerBullets) {
-		posB = bullet->GetWorldPos();
+		posB = bullet->GetWorldPosition();
 		Vector3 leng = posB - posA;
 		float length = leng.Lenght();
 		if (length <= 3.0f) {
 			enemy_->OnCollision();
 			bullet->OnCollision();
 		}
+	}*/
+
+	for (PlayerBullet* bullet : playerBullets) {
+
+		CheckCollisionPair(enemy_, bullet);
 	}
+
 #pragma endregion
 
 #pragma region 敵弾と自弾の当たり判定
 
-	for (PlayerBullet* bullet : playerBullets) {
-		posA = bullet->GetWorldPos();
+	/*for (PlayerBullet* bullet : playerBullets) {
+		posA = bullet->GetWorldPosition();
 		for (EnemyBullet* enemybullet : enemyBullets) {
-			posB = enemybullet->GetWorldPos();
+			posB = enemybullet->GetWorldPosition();
 			Vector3 leng = posB - posA;
 			float length = leng.Lenght();
 			if (length <= 3.0f) {
@@ -168,7 +181,27 @@ void GameScene::CheckAllCollision()
 				bullet->OnCollision();
 			}
 		}
+	}*/
+
+	for (PlayerBullet* bullet : playerBullets) {
+		for (EnemyBullet* enemyBullet : enemyBullets) {
+			CheckCollisionPair(bullet, enemyBullet);
+		}
 	}
+
 #pragma endregion
 
+}
+
+void GameScene::CheckCollisionPair(Collider* colliderA, Collider* colliderB)
+{
+	Vector3 posA, posB;
+	posA = colliderA->GetWorldPosition();
+	posB = colliderB->GetWorldPosition();
+	Vector3 leng = posB - posA;
+	float length = leng.Lenght();
+	if (length <= 3.0f) {
+		colliderA->OnCollision();
+		colliderB->OnCollision();
+	}
 }
