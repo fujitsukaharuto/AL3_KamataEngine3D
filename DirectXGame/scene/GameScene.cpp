@@ -11,6 +11,7 @@ GameScene::~GameScene()
 	delete player_;
 	delete enemy_;
 	delete debugCamera_;
+	delete collisionManager_;
 }
 
 void GameScene::Initialize() {
@@ -36,6 +37,8 @@ void GameScene::Initialize() {
 	enemy_->Initialize(playerModel_, enemyTextureHandle_);
 	enemy_->SetPlayer(player_);
 	enemy_->InitApproach();
+
+	collisionManager_ = new CollisionManager();
 
 }
 
@@ -127,26 +130,19 @@ void GameScene::CheckAllCollision()
 	const std::list<PlayerBullet*>& playerBullets = player_->GetBullets();
 	const std::list<EnemyBullet*>& enemyBullets = enemy_->GetBullets();
 
-	std::list<Collider*> colliders_;
-	colliders_.push_back(player_);
-	colliders_.push_back(enemy_);
+	collisionManager_->ClearCollider();
+
+	collisionManager_->SetCollider(player_);
+	collisionManager_->SetCollider(enemy_);
+
 	for (PlayerBullet* bullet : playerBullets) {
-		colliders_.push_back(bullet);
+		collisionManager_->SetCollider(bullet);
 	}
 	for (EnemyBullet* enemyBullet : enemyBullets) {
-		colliders_.push_back(enemyBullet);
+		collisionManager_->SetCollider(enemyBullet);
 	}
 
-	std::list<Collider*>::iterator itrA = colliders_.begin();
-	for (; itrA != colliders_.end(); ++itrA) {
-		Collider* colliderA = *itrA;
-		std::list<Collider*>::iterator itrB = itrA;
-		itrB++;
-		for (; itrB != colliders_.end();++itrB) {
-			Collider* colliderB = *itrB;
-			CheckCollisionPair(colliderA, colliderB);
-		}
-	}
+	collisionManager_->CheckCollision();
 
 //#pragma region 自キャラと敵弾の当たり判定
 //	/*posA = player_->GetWorldPosition();
@@ -212,22 +208,4 @@ void GameScene::CheckAllCollision()
 //
 //#pragma endregion
 
-}
-
-void GameScene::CheckCollisionPair(Collider* colliderA, Collider* colliderB)
-{
-	if (0xffffffff == (colliderA->GetAttribute() ^ colliderB->GetMask()) || 0xffffffff == (colliderB->GetAttribute() ^ colliderA->GetMask()))
-	{
-		return;
-	}
-
-	Vector3 posA, posB;
-	posA = colliderA->GetWorldPosition();
-	posB = colliderB->GetWorldPosition();
-	Vector3 leng = posB - posA;
-	float length = leng.Lenght();
-	if (length <= 3.0f) {
-		colliderA->OnCollision();
-		colliderB->OnCollision();
-	}
 }
