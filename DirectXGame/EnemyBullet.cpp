@@ -22,6 +22,9 @@ void EnemyBullet::Initialize(Model* model, const Vector3& position, const Vector
 
 	velocity_ = velocity;
 
+	SetAttribute(kCollisionAttributeEnemy);
+	SetMask((0xffffffff ^ (kCollisionAttributeEnemy)));
+
 	worldTransform_.rotation_.y = std::atan2(velocity_.x, velocity_.z);
 	Matrix4x4 yrota = MakeRotateYMatrix(-worldTransform_.rotation_.y);
 	Vector3 velocityZ = TransformNormal(velocity_, yrota);

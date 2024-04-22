@@ -29,7 +29,8 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle)
 	worldTransform_.UpdateMatrix();
 
 	/*InitApproach();*/
-
+	SetAttribute(kCollisionAttributeEnemy);
+	SetMask((0xffffffff ^ (kCollisionAttributeEnemy)));
 }
 
 void (Enemy::*Enemy::pPhaseTable[])() = {
