@@ -14,6 +14,7 @@ GameScene::~GameScene()
 	delete collisionManager_;
 	delete skyDome_;
 	delete skyDomeModel_;
+	delete railCamera_;
 }
 
 void GameScene::Initialize() {
@@ -32,7 +33,7 @@ void GameScene::Initialize() {
 	playerModel_ = Model::Create();
 
 	player_ = new Player();
-	player_->Initialize(playerModel_, playerTextureHandle_);
+	player_->Initialize(playerModel_, playerTextureHandle_, Vector3{0.0f, 0.0f, 30.0f});
 
 	enemyTextureHandle_ = TextureManager::Load("virus_character.png");
 	enemy_ = new Enemy();
@@ -43,6 +44,11 @@ void GameScene::Initialize() {
 	skyDome_ = new SkyDome();
 	skyDomeModel_ = Model::CreateFromOBJ("skyDome", true);
 	skyDome_->Initialize(skyDomeModel_);
+
+	railCamera_ = new RailCamera();
+	railCamera_->Initialize(Vector3{0.0f, 0.0f, 0.0f}, Vector3{0.0f, 0.0f, 0.0f});
+
+	player_->SetParent(&railCamera_->GetWorldTransform());
 
 	collisionManager_ = new CollisionManager();
 
@@ -74,8 +80,13 @@ void GameScene::Update() {
 		viewProject_.TransferMatrix();
 	} else {
 		viewProject_.UpdateMatrix();
+		railCamera_->Update();
+		viewProject_.matView = railCamera_->GetViewProjection().matView;
+		viewProject_.matProjection = railCamera_->GetViewProjection().matProjection;
+		viewProject_.TransferMatrix();
+
 	}
-	
+
 }
 
 void GameScene::Draw() {

@@ -16,7 +16,7 @@ public:
 	/// </summary>
 	/// <param name="model">モデル</param>
 	/// <param name="textureHandle">テクスチャハンドル</param>
-	void Initialize(Model* model,uint32_t textureHandle);
+	void Initialize(Model* model, uint32_t textureHandle, Vector3 position);
 	
 	/// <summary>
 	/// 更新
@@ -49,6 +49,8 @@ public:
 	void OnCollision() override;
 
 	const std::list<PlayerBullet*>& GetBullets() const { return bullets_; }
+
+	void SetParent(const WorldTransform* parent);
 
 private:
 
