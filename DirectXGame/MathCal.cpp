@@ -226,3 +226,67 @@ Vector3 Sleap(const Vector3& v1, const Vector3& v2, float t)
 
 	return newVec * lenrth;
 }
+
+Vector3 CatmullRom(const std::vector<Vector3>& control, float t) {
+	Vector3 result;
+
+	if (control.size()<4) {
+		return Vector3{0, 0, 0};
+	}
+
+	Vector3 p0 = control[0];
+	Vector3 p1 = control[1];
+	Vector3 p2 = control[2];
+	Vector3 p3 = control[3];
+
+	Vector3 a = (p0 * -1) + (p1 * 3) - (p2 * 3) + p3;
+	Vector3 b = (p0 * 2) - (p1 * 5) + (p2 * 4) - p3;
+	Vector3 c = (p0 * -1) + p2;
+	Vector3 d = p1 * 2;
+
+	result = a * powf(t, 3) + b * powf(t, 2) + c * t + d;
+
+	return result;
+}
+
+Vector3 CatmullRomStartPoint(const std::vector<Vector3>& control, float t)
+{
+	Vector3 result;
+
+	if (control.size() < 3) {
+		return Vector3{0, 0, 0};
+	}
+
+	Vector3 p0 = control[0];
+	Vector3 p1 = control[1];
+	Vector3 p2 = control[2];
+
+	Vector3 a = p0 - (p1 * 2) + p2;
+	Vector3 b = (p0 * (-3)) + (p1 * 4) - p2;
+	Vector3 c = p0 * 2;
+
+	result = a * powf(t, 2) + b * t + c;
+
+	return result;
+}
+
+Vector3 CatmullRomEndPoint(const std::vector<Vector3>& control, float t)
+{
+	Vector3 result;
+
+	if (control.size() < 3) {
+		return Vector3{0, 0, 0};
+	}
+
+	Vector3 p0 = control[0];
+	Vector3 p1 = control[1];
+	Vector3 p2 = control[2];
+
+	Vector3 a = p0 - (p1 * 2) + p2;
+	Vector3 b = p0 * (-1) + p2;
+	Vector3 c = p1 * 2;
+
+	result = a * powf(t, 2) + b * t + c;
+
+	return result;
+}

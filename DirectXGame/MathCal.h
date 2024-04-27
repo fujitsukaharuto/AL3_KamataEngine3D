@@ -1,6 +1,7 @@
 #pragma once
 #include "Matrix4x4.h"
 #include "Vector3.h"
+#include <vector>
 
 Matrix4x4 Multiply(const Matrix4x4& matrix1, const Matrix4x4& matrix2);
 
@@ -29,3 +30,9 @@ float Lerp(float v1, float v2, float t);
 Vector3 Leap(const Vector3& v1, const Vector3& v2, float t);
 
 Vector3 Sleap(const Vector3& v1, const Vector3& v2, float t);
+
+Vector3 CatmullRom(const std::vector<Vector3>& control, float t);
+
+Vector3 CatmullRomStartPoint(const std::vector<Vector3>& control, float t);
+
+Vector3 CatmullRomEndPoint(const std::vector<Vector3>& control, float t);

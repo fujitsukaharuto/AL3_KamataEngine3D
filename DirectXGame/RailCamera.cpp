@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "MathCal.h"
 
+
 RailCamera::RailCamera() {}
 
 RailCamera::~RailCamera() {}
@@ -9,8 +10,8 @@ RailCamera::~RailCamera() {}
 void RailCamera::Initialize(Vector3 world, Vector3 rotate)
 {
 
-	worldTransform_.translation_ = world;
-	worldTransform_.rotation_ = rotate;
+	/*worldTransform_.translation_ = world;
+	worldTransform_.rotation_ = rotate;*/
 
 	viewProjection_.Initialize();
 
