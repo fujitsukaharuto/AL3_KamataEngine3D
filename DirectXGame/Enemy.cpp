@@ -3,6 +3,7 @@
 
 #include "MathCal.h"
 #include "Player.h"
+#include "GameScene.h"
 
 Enemy::Enemy() {}
 
@@ -13,10 +14,6 @@ Enemy::~Enemy()
 		delete timedcal;
 	}
 
-	for (EnemyBullet* bullet : bullets_) {
-		delete bullet;
-	}
-
 }
 
 void Enemy::Initialize(Model* model, uint32_t textureHandle)
@@ -25,8 +22,10 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle)
 	model_ = model;
 	textureHandle_ = textureHandle;
 	worldTransform_.Initialize();
-	worldTransform_.translation_ = {10.0f, 10.0f, 40.0f};
+	worldTransform_.translation_ = {10.0f, 10.0f, 80.0f};
 	worldTransform_.UpdateMatrix();
+
+	isDead_ = false;
 
 	/*InitApproach();*/
 	SetAttribute(kCollisionAttributeEnemy);
@@ -48,13 +47,7 @@ void Enemy::Update()
 		return false;
 	});
 
-	bullets_.remove_if([](EnemyBullet* enemyBullet) {
-		if (enemyBullet->IsDead()) {
-			delete enemyBullet;
-			return true;
-		}
-		return false;
-	});
+
 
 
 	//(this->*pPhaseTable[static_cast<size_t>(phase_)])();
@@ -80,9 +73,7 @@ void Enemy::Update()
 		timedcal->Update();
 	}
 
-	for (EnemyBullet* bullet : bullets_) {
-		bullet->Update();
-	}
+
 
 }
 
@@ -90,9 +81,7 @@ void Enemy::Draw(ViewProjection& viewProjection)
 {
 
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
-	for (EnemyBullet* bullet : bullets_) {
-		bullet->Draw(viewProjection);
-	}
+
 
 }
 
@@ -140,7 +129,7 @@ void Enemy::Fire()
 	EnemyBullet* newBullet = new EnemyBullet();
 	newBullet->Initialize(model_, worldTransform_.translation_, velocity);
 	newBullet->SetPlayer(player_);
-	bullets_.push_back(newBullet);
+	gameScene_->AddEnemyBullet(newBullet);
 
 }
 
@@ -170,4 +159,11 @@ Vector3 Enemy::GetWorldPosition()
 	return worldPos;
 }
 
-void Enemy::OnCollision() {}
+void Enemy::OnCollision() { isDead_ = true; }
+
+void Enemy::SetPosition(Vector3 pos)
+{
+
+	worldTransform_.translation_ = {pos.x, pos.y, pos.z};
+
+}

@@ -1,6 +1,7 @@
 #include "GameScene.h"
 #include "TextureManager.h"
 #include "AxisIndicator.h"
+#include <fstream>
 #include <cassert>
 
 GameScene::GameScene() {}
@@ -9,12 +10,17 @@ GameScene::~GameScene()
 { 
 	delete playerModel_; 
 	delete player_;
-	delete enemy_;
+	for (Enemy* enemy : enemy_) {
+		delete enemy;
+	}
 	delete debugCamera_;
 	delete collisionManager_;
 	delete skyDome_;
 	delete skyDomeModel_;
 	delete railCamera_;
+	for (EnemyBullet* bullet : enemybullets_) {
+		delete bullet;
+	}
 }
 
 void GameScene::Initialize() {
@@ -36,10 +42,9 @@ void GameScene::Initialize() {
 	player_->Initialize(playerModel_, playerTextureHandle_, Vector3{0.0f, 0.0f, 30.0f});
 
 	enemyTextureHandle_ = TextureManager::Load("virus_character.png");
-	enemy_ = new Enemy();
-	enemy_->Initialize(playerModel_, enemyTextureHandle_);
-	enemy_->SetPlayer(player_);
-	enemy_->InitApproach();
+
+	isWait_ = false;
+	LoadEnemyPopDate();
 
 	skyDome_ = new SkyDome();
 	skyDomeModel_ = Model::CreateFromOBJ("skyDome", true);
@@ -58,8 +63,28 @@ void GameScene::Update() {
 
 	player_->Update();
 
-	if (enemy_) {
-		enemy_->Update();
+	enemybullets_.remove_if([](EnemyBullet* enemyBullet) {
+	if (enemyBullet->IsDead()) {
+		delete enemyBullet;
+		return true;
+	}
+	return false;
+	});
+	enemy_.remove_if([](Enemy* enemy) {
+		if (enemy->IsDead()) {
+			delete enemy;
+			return true;
+		}
+		return false;
+	});
+	UpdateEnemyPopCommands();
+	for (Enemy* enemy : enemy_) {
+		if (!enemy->IsDead()) {
+			enemy->Update();
+		}
+	}
+	for (EnemyBullet* bullet : enemybullets_) {
+		bullet->Update();
 	}
 
 	CheckAllCollision();
@@ -119,8 +144,13 @@ void GameScene::Draw() {
 	skyDome_->Draw(viewProject_);
 
 	player_->Draw(viewProject_);
-	if (enemy_) {
-		enemy_->Draw(viewProject_);
+	for (Enemy* enemy : enemy_) {
+		if (!enemy->IsDead()) {
+			enemy->Draw(viewProject_);
+		}
+	}
+	for (EnemyBullet* bullet : enemybullets_) {
+		bullet->Draw(viewProject_);
 	}
 
 
@@ -148,13 +178,15 @@ void GameScene::CheckAllCollision()
 	//Vector3 posA, posB;
 
 	const std::list<PlayerBullet*>& playerBullets = player_->GetBullets();
-	const std::list<EnemyBullet*>& enemyBullets = enemy_->GetBullets();
+	const std::list<EnemyBullet*>& enemyBullets = enemybullets_;
 
 	collisionManager_->ClearCollider();
 
 	collisionManager_->SetCollider(player_);
-	collisionManager_->SetCollider(enemy_);
 
+	for (Enemy* enemy : enemy_) {
+		collisionManager_->SetCollider(enemy);
+	}
 	for (PlayerBullet* bullet : playerBullets) {
 		collisionManager_->SetCollider(bullet);
 	}
@@ -227,5 +259,95 @@ void GameScene::CheckAllCollision()
 //	}
 //
 //#pragma endregion
+
+}
+
+void GameScene::AddEnemyBullet(EnemyBullet* enemybullet)
+{
+
+	enemybullets_.push_back(enemybullet);
+
+}
+
+void GameScene::LoadEnemyPopDate()
+{ 
+	std::ifstream file;
+	file.open("Resources/enemyPop.csv");
+	assert(file.is_open());
+
+	enemyPopCommands << file.rdbuf();
+
+	file.close();
+}
+
+void GameScene::UpdateEnemyPopCommands()
+{ 
+	if (isWait_) {
+		waitTimer_--;
+		if (waitTimer_ <= 0){
+			isWait_ = false;
+		}
+		return;
+	}
+	
+	std::string line;
+	while (std::getline(enemyPopCommands,line)) {
+	
+		std::istringstream line_stream(line);
+
+		std::string word;
+
+		//,区切りで行の先頭文字列取得
+		std::getline(line_stream, word, ',');
+
+
+		if (word.find("//")==0) {
+			continue;//コメント行飛ばす
+		}
+		//POP
+		if (word.find("POP") == 0)
+		{
+		
+			//x座標
+			std::getline(line_stream, word, ',');
+			float x = (float)std::atof(word.c_str());
+			//y座標
+			std::getline(line_stream, word, ',');
+			float y = (float)std::atof(word.c_str());
+			//ｚ座標
+			std::getline(line_stream, word, ',');
+			float z = (float)std::atof(word.c_str());
+
+			EnemyPop(Vector3{x, y, z});
+
+		}
+		//WAIT
+		else if (word.find("WAIT") == 0) {
+			std::getline(line_stream, word, ',');
+
+			//待ち時間
+			int32_t waitTime = atoi(word.c_str());
+
+			isWait_ = true;
+			waitTimer_ = waitTime;
+
+			break;
+		}
+
+	}
+
+
+}
+
+void GameScene::EnemyPop(Vector3 pos)
+{
+
+	Enemy* newEnemy = new Enemy();
+	newEnemy->Initialize(playerModel_, enemyTextureHandle_);
+	newEnemy->SetGameScene(this);
+	newEnemy->SetPlayer(player_);
+	newEnemy->SetPosition(Vector3{pos.x, pos.y, pos.z});
+	newEnemy->InitApproach();
+	enemy_.push_back(newEnemy);
 
 }

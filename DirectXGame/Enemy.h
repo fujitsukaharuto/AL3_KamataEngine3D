@@ -8,7 +8,7 @@
 
 
 class Player;
-
+class GameScene;
 
 class Enemy :public Collider{
 public:
@@ -70,7 +70,13 @@ public:
 
 	void OnCollision() override;
 
-	const std::list<EnemyBullet*>& GetBullets() const { return bullets_; }
+	//const std::list<EnemyBullet*>& GetBullets() const { return bullets_; }
+
+	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
+
+	bool IsDead() { return isDead_; }
+
+	void SetPosition(Vector3 pos);
 
 private:
 
@@ -80,12 +86,16 @@ private:
 
 	Phase phase_ = Phase::Approach;
 
+	GameScene* gameScene_ = nullptr;
+
 	static void (Enemy::*pPhaseTable[])();
-	std::list<EnemyBullet*> bullets_;
+
 	static const int32_t kFireTime = 60;
 	int32_t fireTimer_ = kFireTime;
 
 	std::list<TimedCall*> timedCalls_;
 	Player* player_;
+
+	bool isDead_;
 
 };

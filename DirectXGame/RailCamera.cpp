@@ -10,8 +10,8 @@ RailCamera::~RailCamera() {}
 void RailCamera::Initialize(Vector3 world, Vector3 rotate)
 {
 
-	/*worldTransform_.translation_ = world;
-	worldTransform_.rotation_ = rotate;*/
+	worldTransform_.translation_ = world;
+	worldTransform_.rotation_ = rotate;
 
 	viewProjection_.Initialize();
 
@@ -19,10 +19,10 @@ void RailCamera::Initialize(Vector3 world, Vector3 rotate)
 
 void RailCamera::Update()
 {
-	float kSpeed = 0.2f;
-	float kRotateSpedd = 0.002f;
-	worldTransform_.translation_.z -= kSpeed;
-	worldTransform_.rotation_.y += kRotateSpedd;
+	//float kSpeed = 0.2f;
+	//float kRotateSpedd = 0.002f;
+	//worldTransform_.translation_.z -= kSpeed;
+	//worldTransform_.rotation_.y += kRotateSpedd;
 #ifdef _DEBUG
 
 	ImGui::Begin("Camera");
