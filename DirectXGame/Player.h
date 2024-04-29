@@ -1,6 +1,7 @@
 #pragma once
 #include "Model.h"
 #include "Input.h"
+#include "Sprite.h"
 #include "WorldTransform.h"
 #include "PlayerBullet.h"
 #include "Collider.h"
@@ -21,13 +22,13 @@ public:
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void Update();
+	void Update(const ViewProjection& viewProjection);
 	
 	/// <summary>
 	/// 描画
 	/// </summary>
 	/// <param name="viewProjection">ビュープロジェクション（参照渡し）</param>
-	void Draw(ViewProjection& viewProjection);
+	void Draw(const ViewProjection& viewProjection);
 
 	/// <summary>
 	/// 移動
@@ -52,6 +53,10 @@ public:
 
 	void SetParent(const WorldTransform* parent);
 
+	void DrawUI();
+
+	void ReticleCal(const ViewProjection& viewProjection);
+
 private:
 
 	WorldTransform worldTransform_;
@@ -60,5 +65,9 @@ private:
 
 	Input* input_ = nullptr;
 	std::list<PlayerBullet*> bullets_;
+
+	WorldTransform worldTransfoem3DReticle_;
+
+	Sprite* sprite2DReticle_ = nullptr;
 
 };

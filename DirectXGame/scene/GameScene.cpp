@@ -39,7 +39,8 @@ void GameScene::Initialize() {
 	playerModel_ = Model::Create();
 
 	player_ = new Player();
-	player_->Initialize(playerModel_, playerTextureHandle_, Vector3{0.0f, 0.0f, 30.0f});
+	TextureManager::Load("reticle.png");
+	player_->Initialize(playerModel_, playerTextureHandle_, Vector3{0.0f, 0.0f, 35.0f});
 
 	enemyTextureHandle_ = TextureManager::Load("virus_character.png");
 
@@ -61,8 +62,8 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 
-	player_->Update();
-
+	player_->Update(viewProject_);
+	
 	enemybullets_.remove_if([](EnemyBullet* enemyBullet) {
 	if (enemyBullet->IsDead()) {
 		delete enemyBullet;
@@ -165,6 +166,8 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに前景スプライトの描画処理を追加できる
 	/// </summary>
+
+	player_->DrawUI();
 
 	// スプライト描画後処理
 	Sprite::PostDraw();
