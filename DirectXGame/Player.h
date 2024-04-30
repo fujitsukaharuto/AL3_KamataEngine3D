@@ -57,6 +57,9 @@ public:
 
 	void ReticleCal(const ViewProjection& viewProjection);
 
+	void ReticleMouse(const ViewProjection& viewProjection);
+
+
 private:
 
 	WorldTransform worldTransform_;
