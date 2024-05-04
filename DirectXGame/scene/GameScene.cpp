@@ -154,6 +154,7 @@ void GameScene::Draw() {
 		bullet->Draw(viewProject_);
 	}
 
+	player_->LineDraw(viewProject_);
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();

@@ -59,6 +59,7 @@ public:
 
 	void ReticleMouse(const ViewProjection& viewProjection);
 
+	void LineDraw(const ViewProjection& viewProjection);
 
 private:
 
@@ -72,5 +73,7 @@ private:
 	WorldTransform worldTransfoem3DReticle_;
 
 	Sprite* sprite2DReticle_ = nullptr;
+
+	std::vector<Vector3> controlPoints_;
 
 };

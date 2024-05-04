@@ -31,6 +31,10 @@ Vector3 Leap(const Vector3& v1, const Vector3& v2, float t);
 
 Vector3 Sleap(const Vector3& v1, const Vector3& v2, float t);
 
+float Clamp(float x, float min, float max);
+
+Vector3 CatmullRomPoint(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t);
+
 Vector3 CatmullRom(const std::vector<Vector3>& control, float t);
 
 Vector3 CatmullRomStartPoint(const std::vector<Vector3>& control, float t);

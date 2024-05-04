@@ -4,6 +4,7 @@
 #include "TextureManager.h"
 #include "ViewProjection.h"
 #include "WinApp.h"
+#include "PrimitiveDrawer.h"
 #include <cassert>
 
 Player::Player() {}
@@ -32,6 +33,14 @@ void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 position) 
 	uint32_t textureReticle = TextureManager::Load("reticle.png");
 	sprite2DReticle_ = Sprite::Create(textureReticle, {0, 0}, {1, 1, 1, 1}, {0.5f, 0.5f});
 
+	controlPoints_ = {
+	    {0,  0,  0},
+        {10, 10, 0},
+        {10, 15, 0},
+        {20, 15, 0},
+        {20, 0,  0},
+        {30, 0,  0},
+	};
 }
 
 void Player::Update(const ViewProjection& viewProjection) 
@@ -246,8 +255,8 @@ void Player::ReticleMouse(const ViewProjection& viewProjection) {
 	Vector3 mouseDirection = posFar - posNear;
 	mouseDirection = mouseDirection.Normalize();
 
-	const float kDistanceTestObject = 100.0f;
-	worldTransfoem3DReticle_.translation_ = (mouseDirection * kDistanceTestObject) - posNear;
+	const float kDistanceTestObject = 80.0f;
+	worldTransfoem3DReticle_.translation_ = posNear + (mouseDirection * kDistanceTestObject);
 	worldTransfoem3DReticle_.UpdateMatrix();
 
 #ifdef _DEBUG
@@ -261,5 +270,25 @@ void Player::ReticleMouse(const ViewProjection& viewProjection) {
 	ImGui::End();
 
 #endif // _DEBUG
+
+}
+
+void Player::LineDraw(const ViewProjection& viewProjection)
+{
+	PrimitiveDrawer::GetInstance()->SetViewProjection(&viewProjection);
+	std::vector<Vector3> pointsDrawing;
+	const size_t segumentCount = 100;
+	for (size_t i = 0; i < segumentCount+1; i++) {
+		float t = 1.0f / segumentCount * i;
+		Vector3 pos = CatmullRom(controlPoints_, t);
+		pointsDrawing.push_back(pos);
+	}
+
+	for (int i = 0; i < pointsDrawing.size() - 2;) {
+		int index1 = i;
+		i++;
+		int index2 = i;
+		PrimitiveDrawer::GetInstance()->DrawLine3d(pointsDrawing[index1], pointsDrawing[index2], Vector4{1.0f, 0.0f, 0.0f, 1.0f});
+	}
 
 }
