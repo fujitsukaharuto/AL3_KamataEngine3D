@@ -34,12 +34,12 @@ void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 position) 
 	sprite2DReticle_ = Sprite::Create(textureReticle, {0, 0}, {1, 1, 1, 1}, {0.5f, 0.5f});
 
 	controlPoints_ = {
-	    {0,  0,  0},
-        {10, 10, 0},
-        {10, 15, 0},
-        {20, 15, 0},
-        {20, 0,  0},
-        {30, 0,  0},
+	    {0,   0,   0  },
+        {100, 100, 80 },
+        {100, 150, 100},
+        {200, 150, 120},
+        {200, 0,   140},
+        {250, 0,   100},
 	};
 }
 

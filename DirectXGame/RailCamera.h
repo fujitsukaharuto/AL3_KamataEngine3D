@@ -21,4 +21,6 @@ private:
 	WorldTransform worldTransform_;
 	ViewProjection viewProjection_;
 
+	std::vector<Vector3> controlPoints_;
+	float time_ = 0;
 };
