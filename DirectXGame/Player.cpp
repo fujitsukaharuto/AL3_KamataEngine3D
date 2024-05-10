@@ -57,8 +57,8 @@ void Player::Update(const ViewProjection& viewProjection)
 	Rotate();
 	
 	Move();
-	const float kMoveLimitX = 32.5f;
-	const float kMoveLimitY = 18.5f;
+	const float kMoveLimitX = 25.5f;
+	const float kMoveLimitY = 12.5f;
 
 	worldTransform_.translation_.x = max(worldTransform_.translation_.x, -kMoveLimitX);
 	worldTransform_.translation_.x = min(worldTransform_.translation_.x, +kMoveLimitX);
