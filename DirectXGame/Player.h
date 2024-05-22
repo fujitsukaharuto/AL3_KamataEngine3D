@@ -7,6 +7,8 @@
 #include "Collider.h"
 #include <list>
 
+class Enemy;
+
 class Player :public Collider {
 public:
 	Player();
@@ -53,6 +55,10 @@ public:
 
 	void SetParent(const WorldTransform* parent);
 
+	void SetEnemyList(Enemy* enemy);
+
+	void SetTargetEnemy(Enemy* enemy);
+
 	void DrawUI();
 
 	void ReticleCal(const ViewProjection& viewProjection);
@@ -76,4 +82,9 @@ private:
 
 	std::vector<Vector3> controlPoints_;
 
+	std::list<Enemy*> enemys_;
+	Enemy* targetEnemy_ = nullptr;
+	bool isLock_ = false;
+	Vector2 preLockPos_;
+	float unLockTime_=20;
 };

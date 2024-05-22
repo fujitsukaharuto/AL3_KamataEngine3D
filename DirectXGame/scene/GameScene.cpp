@@ -62,6 +62,18 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 
+	enemy_.remove_if([](Enemy* enemy) {
+		if (enemy->IsDead()) {
+			delete enemy;
+			return true;
+		}
+		return false;
+	});
+	for (Enemy* enemy : enemy_) {
+		if (!enemy->IsDead()) {
+			player_->SetEnemyList(enemy);
+		}
+	}
 	player_->Update(viewProject_);
 	
 	enemybullets_.remove_if([](EnemyBullet* enemyBullet) {
@@ -71,13 +83,7 @@ void GameScene::Update() {
 	}
 	return false;
 	});
-	enemy_.remove_if([](Enemy* enemy) {
-		if (enemy->IsDead()) {
-			delete enemy;
-			return true;
-		}
-		return false;
-	});
+	
 	UpdateEnemyPopCommands();
 	for (Enemy* enemy : enemy_) {
 		if (!enemy->IsDead()) {

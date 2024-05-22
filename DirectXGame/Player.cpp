@@ -5,6 +5,7 @@
 #include "ViewProjection.h"
 #include "WinApp.h"
 #include "PrimitiveDrawer.h"
+#include "Enemy.h"
 #include <cassert>
 
 Player::Player() {}
@@ -83,13 +84,13 @@ void Player::Update(const ViewProjection& viewProjection)
 	worldTransfoem3DReticle_.translation_ = PosPlayer + offset;
 	worldTransfoem3DReticle_.UpdateMatrix();
 
-	ReticleMouse(viewProjection);
+	ReticleCal(viewProjection);
 
 	Attack();
 	for (PlayerBullet* bullet : bullets_) {
 		bullet->Update();
 	}
-
+	enemys_.clear();
 }
 
 void Player::Draw(const ViewProjection& viewProjection)
@@ -148,7 +149,12 @@ void Player::Attack()
 	if (!Input::GetInstance()->GetJoystickState(0, joyState)) {
 		if (input_->TriggerKey(DIK_SPACE)) {
 			const float kBulletSpeed = 1.0f;
-			Vector3 worldPosReticle = {worldTransfoem3DReticle_.matWorld_.m[3][0], worldTransfoem3DReticle_.matWorld_.m[3][1], worldTransfoem3DReticle_.matWorld_.m[3][2]};
+			Vector3 worldPosReticle;
+			if (!isLock_) {
+				worldPosReticle = {worldTransfoem3DReticle_.matWorld_.m[3][0], worldTransfoem3DReticle_.matWorld_.m[3][1], worldTransfoem3DReticle_.matWorld_.m[3][2]};
+			} else {
+				worldPosReticle = {targetEnemy_->GetWorldPosition().x, targetEnemy_->GetWorldPosition().y, targetEnemy_->GetWorldPosition().z};
+			}
 			Vector3 worldPosPlayer = {worldTransform_.matWorld_.m[3][0], worldTransform_.matWorld_.m[3][1], worldTransform_.matWorld_.m[3][2]};
 			Vector3 velocity = worldPosReticle - worldPosPlayer;
 			velocity = velocity.Normalize();
@@ -195,6 +201,10 @@ void Player::SetParent(const WorldTransform* parent)
 
 }
 
+void Player::SetEnemyList(Enemy* enemy) { enemys_.push_back(enemy); }
+
+void Player::SetTargetEnemy(Enemy* enemy) { targetEnemy_ = enemy; }
+
 void Player::DrawUI()
 {
 
@@ -212,7 +222,35 @@ void Player::ReticleCal(const ViewProjection& viewProjection)
 
 	positionReticle = Transform(positionReticle, matViewProJectionViewport);
 
-	sprite2DReticle_->SetPosition(Vector2(positionReticle.x, positionReticle.y));
+	float length = 40;
+	isLock_ = false;
+	for (Enemy* enemy : enemys_) {
+		Vector3 positionEnemy = {enemy->GetWorldPosition().x, enemy->GetWorldPosition().y, enemy->GetWorldPosition().z};
+	
+		positionEnemy = Transform(positionEnemy, matViewProJectionViewport);
+		Vector2 screenEnemy = {float(positionEnemy.x), float(positionEnemy.y)};
+		Vector2 screen3D = {float(positionReticle.x), float(positionReticle.y)};
+		float newLength = (screenEnemy - screen3D).Lenght();
+		if (newLength < 30) {
+			if (newLength < length) {
+				sprite2DReticle_->SetPosition(screenEnemy);
+				length = newLength;
+				isLock_ = true;
+				SetTargetEnemy(enemy);
+				preLockPos_ = screenEnemy;
+				unLockTime_ = 0;
+			}
+		}
+	}
+	if (!isLock_) {
+		if (unLockTime_>20) {
+			sprite2DReticle_->SetPosition(Vector2(float(positionReticle.x), float(positionReticle.y)));
+		} else {
+			unLockTime_++;
+			Vector2 reticle2DPos = {Lerp(preLockPos_.x, positionReticle.x, unLockTime_ / 20.0f), Lerp(preLockPos_.y, positionReticle.y, unLockTime_ / 20.0f)};
+			sprite2DReticle_->SetPosition(Vector2(float(reticle2DPos.x), float(reticle2DPos.y)));
+		}
+	}
 
 #ifdef _DEBUG
 
@@ -233,11 +271,56 @@ void Player::ReticleMouse(const ViewProjection& viewProjection) {
 	Vector2 spritePos = sprite2DReticle_->GetPosition();
 	XINPUT_STATE joyState;
 
-	sprite2DReticle_->SetPosition(Vector2(float(mousePosition.x), float(mousePosition.y)));
-	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
+	float length = 40;
+	isLock_ = false;
+	if (!Input::GetInstance()->GetJoystickState(0, joyState)) {
+		for (Enemy* enemy : enemys_) {
+			Vector3 positionEnemy = {enemy->GetWorldPosition().x, enemy->GetWorldPosition().y, enemy->GetWorldPosition().z};
+			Matrix4x4 matViewport = MakeViewportMatrix(0, 0, WinApp::kWindowWidth, WinApp::kWindowHeight, 0, 1);
+			Matrix4x4 matViewProJectionViewport = Multiply(viewProjection.matView, viewProjection.matProjection);
+			matViewProJectionViewport = Multiply(matViewProJectionViewport, matViewport);
+
+			positionEnemy = Transform(positionEnemy, matViewProJectionViewport);
+			Vector2 screenEnemy = {float(positionEnemy.x), float(positionEnemy.y)};
+			Vector2 mouse = {float(mousePosition.x), float(mousePosition.y)};
+			float newLength = (screenEnemy - mouse).Lenght();
+			if (newLength < 30) {
+				if (newLength < length) {
+					sprite2DReticle_->SetPosition(screenEnemy);
+					length = newLength;
+					isLock_ = true;
+					SetTargetEnemy(enemy);
+				}
+			}
+		}
+		if (!isLock_) {
+			sprite2DReticle_->SetPosition(Vector2(float(mousePosition.x), float(mousePosition.y)));
+		}
+	} else if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 		spritePos.x += (float)joyState.Gamepad.sThumbRX / SHRT_MAX * 5.0f;
 		spritePos.y += (float)joyState.Gamepad.sThumbRY / SHRT_MAX * 5.0f;
-		sprite2DReticle_->SetPosition(spritePos);
+		
+		for (Enemy* enemy : enemys_) {
+			Vector3 positionEnemy = {enemy->GetWorldPosition().x, enemy->GetWorldPosition().y, enemy->GetWorldPosition().z};
+			Matrix4x4 matViewport = MakeViewportMatrix(0, 0, WinApp::kWindowWidth, WinApp::kWindowHeight, 0, 1);
+			Matrix4x4 matViewProJectionViewport = Multiply(viewProjection.matView, viewProjection.matProjection);
+			matViewProJectionViewport = Multiply(matViewProJectionViewport, matViewport);
+
+			positionEnemy = Transform(positionEnemy, matViewProJectionViewport);
+			Vector2 screenEnemy = {float(positionEnemy.x), float(positionEnemy.y)};
+			float newLength = (screenEnemy - spritePos).Lenght();
+			if (newLength < 30) {
+				if (newLength < length) {
+					sprite2DReticle_->SetPosition(screenEnemy);
+					length = newLength;
+					isLock_ = true;
+					SetTargetEnemy(enemy);
+				}
+			}
+		}
+		if (!isLock_) {
+			sprite2DReticle_->SetPosition(spritePos);
+		}
 	}
 
 	Matrix4x4 matViewport = MakeViewportMatrix(0, 0, WinApp::kWindowWidth, WinApp::kWindowHeight, 0, 1);
@@ -246,8 +329,8 @@ void Player::ReticleMouse(const ViewProjection& viewProjection) {
 
 	Matrix4x4 matInverseVPV = Inverse(matVPV);
 
-	Vector3 posNear = Vector3(float(mousePosition.x), float(mousePosition.y), 0);
-	Vector3 posFar = Vector3(float(mousePosition.x), float(mousePosition.y), 1);
+	Vector3 posNear = Vector3(float(sprite2DReticle_->GetPosition().x), float(sprite2DReticle_->GetPosition().y), 0);
+	Vector3 posFar = Vector3(float(sprite2DReticle_->GetPosition().x), float(sprite2DReticle_->GetPosition().y), 1);
 
 	posNear = Transform(posNear, matInverseVPV);
 	posFar = Transform(posFar, matInverseVPV);

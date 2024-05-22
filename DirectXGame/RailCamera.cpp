@@ -33,7 +33,7 @@ void RailCamera::Update()
 	//worldTransform_.translation_.z -= kSpeed;
 	//worldTransform_.rotation_.y += kRotateSpedd;
 
-	const float timelimitt = 2500.0f;
+	/*const float timelimitt = 2500.0f;
 	if (time_<timelimitt) {
 		time_++;
 	}
@@ -54,7 +54,7 @@ void RailCamera::Update()
 	Matrix4x4 yrota = MakeRotateYMatrix(-worldTransform_.rotation_.y);
 	forwardZ = TransformNormal(forwardZ, yrota);
 
-	worldTransform_.rotation_.x = std::atan2(-forwardZ.y, forwardZ.z);
+	worldTransform_.rotation_.x = std::atan2(-forwardZ.y, forwardZ.z);*/
 
 
 #ifdef _DEBUG
