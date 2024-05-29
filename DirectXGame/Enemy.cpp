@@ -136,7 +136,7 @@ void Enemy::Fire()
 void Enemy::FireRoop()
 {
 
-	Fire();
+	/*Fire();*/
 	timedCalls_.push_back(new TimedCall(std::bind(&Enemy::FireRoop, this), 60));
 
 }

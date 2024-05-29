@@ -33,6 +33,9 @@ void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 position) 
 
 	uint32_t textureReticle = TextureManager::Load("reticle.png");
 	sprite2DReticle_ = Sprite::Create(textureReticle, {0, 0}, {1, 1, 1, 1}, {0.5f, 0.5f});
+	for (int i = 0; i < 5; i++) {
+		lockOnSprite_[i] = Sprite::Create(textureReticle, {0, 0}, {0.9f, 0, 0, 1}, {0.5f, 0.5f});
+	}
 
 	controlPoints_ = {
 	    {0,   0,   0  },
@@ -84,7 +87,7 @@ void Player::Update(const ViewProjection& viewProjection)
 	worldTransfoem3DReticle_.translation_ = PosPlayer + offset;
 	worldTransfoem3DReticle_.UpdateMatrix();
 
-	ReticleCal(viewProjection);
+	ReticleMouse(viewProjection);
 
 	Attack();
 	for (PlayerBullet* bullet : bullets_) {
@@ -150,20 +153,37 @@ void Player::Attack()
 		if (input_->TriggerKey(DIK_SPACE)) {
 			const float kBulletSpeed = 1.0f;
 			Vector3 worldPosReticle;
-			if (!isLock_) {
+			if (targetEnemyList_.size() == 0) {
 				worldPosReticle = {worldTransfoem3DReticle_.matWorld_.m[3][0], worldTransfoem3DReticle_.matWorld_.m[3][1], worldTransfoem3DReticle_.matWorld_.m[3][2]};
-			} else {
-				worldPosReticle = {targetEnemy_->GetWorldPosition().x, targetEnemy_->GetWorldPosition().y, targetEnemy_->GetWorldPosition().z};
-			}
-			Vector3 worldPosPlayer = {worldTransform_.matWorld_.m[3][0], worldTransform_.matWorld_.m[3][1], worldTransform_.matWorld_.m[3][2]};
-			Vector3 velocity = worldPosReticle - worldPosPlayer;
-			velocity = velocity.Normalize();
-			velocity = velocity * kBulletSpeed;
+			
+				Vector3 worldPosPlayer = {worldTransform_.matWorld_.m[3][0], worldTransform_.matWorld_.m[3][1], worldTransform_.matWorld_.m[3][2]};
+				Vector3 velocity = worldPosReticle - worldPosPlayer;
+				velocity = velocity.Normalize();
+				velocity = velocity * kBulletSpeed;
 
-			PlayerBullet* newBullet = new PlayerBullet();
-			Vector3 worldPos = {worldTransform_.matWorld_.m[3][0], worldTransform_.matWorld_.m[3][1], worldTransform_.matWorld_.m[3][2]};
-			newBullet->Initialize(model_, worldPos, velocity);
-			bullets_.push_back(newBullet);
+				PlayerBullet* newBullet = new PlayerBullet();
+				Vector3 worldPos = {worldTransform_.matWorld_.m[3][0], worldTransform_.matWorld_.m[3][1], worldTransform_.matWorld_.m[3][2]};
+				newBullet->Initialize(model_, worldPos, velocity);
+				bullets_.push_back(newBullet);
+			
+			} else {
+
+				for (Enemy* i : targetEnemyList_) {
+				
+					worldPosReticle = {i->GetWorldPosition().x, i->GetWorldPosition().y, i->GetWorldPosition().z};
+					Vector3 worldPosPlayer = {worldTransform_.matWorld_.m[3][0], worldTransform_.matWorld_.m[3][1], worldTransform_.matWorld_.m[3][2]};
+					Vector3 velocity = worldPosReticle - worldPosPlayer;
+					velocity = velocity.Normalize();
+					velocity = velocity * kBulletSpeed;
+
+					PlayerBullet* newBullet = new PlayerBullet();
+					Vector3 worldPos = {worldTransform_.matWorld_.m[3][0], worldTransform_.matWorld_.m[3][1], worldTransform_.matWorld_.m[3][2]};
+					newBullet->Initialize(model_, worldPos, velocity);
+					bullets_.push_back(newBullet);
+				}
+				targetEnemyList_.clear();
+			}
+			
 		}
 		return;
 	}
@@ -207,8 +227,11 @@ void Player::SetTargetEnemy(Enemy* enemy) { targetEnemy_ = enemy; }
 
 void Player::DrawUI()
 {
-
+	for (int i = 0; i < targetEnemyList_.size(); i++) {
+		lockOnSprite_[i]->Draw();
+	}
 	sprite2DReticle_->Draw();
+
 
 }
 
@@ -272,9 +295,10 @@ void Player::ReticleMouse(const ViewProjection& viewProjection) {
 	XINPUT_STATE joyState;
 
 	float length = 40;
-	isLock_ = false;
+	
 	if (!Input::GetInstance()->GetJoystickState(0, joyState)) {
 		for (Enemy* enemy : enemys_) {
+			isLock_ = true;
 			Vector3 positionEnemy = {enemy->GetWorldPosition().x, enemy->GetWorldPosition().y, enemy->GetWorldPosition().z};
 			Matrix4x4 matViewport = MakeViewportMatrix(0, 0, WinApp::kWindowWidth, WinApp::kWindowHeight, 0, 1);
 			Matrix4x4 matViewProJectionViewport = Multiply(viewProjection.matView, viewProjection.matProjection);
@@ -285,17 +309,46 @@ void Player::ReticleMouse(const ViewProjection& viewProjection) {
 			Vector2 mouse = {float(mousePosition.x), float(mousePosition.y)};
 			float newLength = (screenEnemy - mouse).Lenght();
 			if (newLength < 30) {
-				if (newLength < length) {
+				/*if (newLength < length) {
 					sprite2DReticle_->SetPosition(screenEnemy);
 					length = newLength;
 					isLock_ = true;
 					SetTargetEnemy(enemy);
+				}*/
+
+				for (Enemy* i : targetEnemyList_) {
+					
+					if (enemy == i) {
+						isLock_ = false;
+					}
+				
 				}
+
+				if (isLock_) {
+					targetEnemyList_.push_back(enemy);
+				}
+
 			}
 		}
-		if (!isLock_) {
-			sprite2DReticle_->SetPosition(Vector2(float(mousePosition.x), float(mousePosition.y)));
+		sprite2DReticle_->SetPosition(Vector2(float(mousePosition.x), float(mousePosition.y)));
+		int setPosIndex = 0;
+		for (Enemy* i : targetEnemyList_) {
+		
+			
+			Vector3 positionEnemy = {i->GetWorldPosition().x, i->GetWorldPosition().y, i->GetWorldPosition().z};
+			Matrix4x4 matViewport = MakeViewportMatrix(0, 0, WinApp::kWindowWidth, WinApp::kWindowHeight, 0, 1);
+			Matrix4x4 matViewProJectionViewport = Multiply(viewProjection.matView, viewProjection.matProjection);
+			matViewProJectionViewport = Multiply(matViewProJectionViewport, matViewport);
+
+			positionEnemy = Transform(positionEnemy, matViewProJectionViewport);
+			Vector2 screenEnemy = {float(positionEnemy.x), float(positionEnemy.y)};
+			lockOnSprite_[setPosIndex]->SetPosition(screenEnemy);
+			setPosIndex++;
 		}
+
+		/*if (!isLock_) {
+			sprite2DReticle_->SetPosition(Vector2(float(mousePosition.x), float(mousePosition.y)));
+		}*/
 	} else if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 		spritePos.x += (float)joyState.Gamepad.sThumbRX / SHRT_MAX * 5.0f;
 		spritePos.y += (float)joyState.Gamepad.sThumbRY / SHRT_MAX * 5.0f;

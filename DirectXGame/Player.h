@@ -79,11 +79,13 @@ private:
 	WorldTransform worldTransfoem3DReticle_;
 
 	Sprite* sprite2DReticle_ = nullptr;
+	Sprite* lockOnSprite_[5];
 
 	std::vector<Vector3> controlPoints_;
 
 	std::list<Enemy*> enemys_;
 	Enemy* targetEnemy_ = nullptr;
+	std::list<Enemy*> targetEnemyList_;
 	bool isLock_ = false;
 	Vector2 preLockPos_;
 	float unLockTime_=20;
