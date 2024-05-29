@@ -92,7 +92,7 @@ void Player::Update(const ViewProjection& viewProjection)
 	worldTransfoem3DReticle_.translation_ = PosPlayer + offset;
 	worldTransfoem3DReticle_.UpdateMatrix();
 
-	ReticleMouse(viewProjection);
+	ReticleCal(viewProjection);
 
 	Attack();
 	for (PlayerBullet* bullet : bullets_) {
@@ -250,8 +250,7 @@ void Player::ReticleCal(const ViewProjection& viewProjection)
 
 	positionReticle = Transform(positionReticle, matViewProJectionViewport);
 
-	float length = 40;
-	isLock_ = false;
+	isLock_ = true;
 	for (Enemy* enemy : enemys_) {
 		Vector3 positionEnemy = {enemy->GetWorldPosition().x, enemy->GetWorldPosition().y, enemy->GetWorldPosition().z};
 	
@@ -260,17 +259,29 @@ void Player::ReticleCal(const ViewProjection& viewProjection)
 		Vector2 screen3D = {float(positionReticle.x), float(positionReticle.y)};
 		float newLength = (screenEnemy - screen3D).Lenght();
 		if (newLength < 30) {
-			if (newLength < length) {
+			/*if (newLength < length) {
 				sprite2DReticle_->SetPosition(screenEnemy);
 				length = newLength;
 				isLock_ = true;
 				SetTargetEnemy(enemy);
 				preLockPos_ = screenEnemy;
 				unLockTime_ = 0;
+			}*/
+
+			for (Enemy* i : targetEnemyList_) {
+
+				if (enemy == i) {
+					isLock_ = false;
+				}
 			}
+
+			if (isLock_) {
+				targetEnemyList_.push_back(enemy);
+			}
+
 		}
 	}
-	if (!isLock_) {
+	/*if (!isLock_) {
 		if (unLockTime_>20) {
 			sprite2DReticle_->SetPosition(Vector2(float(positionReticle.x), float(positionReticle.y)));
 		} else {
@@ -278,7 +289,19 @@ void Player::ReticleCal(const ViewProjection& viewProjection)
 			Vector2 reticle2DPos = {Lerp(preLockPos_.x, positionReticle.x, unLockTime_ / 20.0f), Lerp(preLockPos_.y, positionReticle.y, unLockTime_ / 20.0f)};
 			sprite2DReticle_->SetPosition(Vector2(float(reticle2DPos.x), float(reticle2DPos.y)));
 		}
+	}*/
+	sprite2DReticle_->SetPosition(Vector2(float(positionReticle.x), float(positionReticle.y)));
+	int setPosIndex = 0;
+	for (Enemy* i : targetEnemyList_) {
+
+		Vector3 positionEnemy = {i->GetWorldPosition().x, i->GetWorldPosition().y, i->GetWorldPosition().z};
+
+		positionEnemy = Transform(positionEnemy, matViewProJectionViewport);
+		Vector2 screenEnemy = {float(positionEnemy.x), float(positionEnemy.y)};
+		lockOnSprite_[setPosIndex]->SetPosition(screenEnemy);
+		setPosIndex++;
 	}
+
 
 #ifdef _DEBUG
 
