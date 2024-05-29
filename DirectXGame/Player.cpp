@@ -17,6 +17,11 @@ Player::~Player()
 		delete bullet;
 	}
 	delete sprite2DReticle_;
+	for (int i = 0; i < 5; i++) {
+		delete lockOnSprite_[i];
+	}
+	enemys_.clear();
+	targetEnemyList_.clear();
 }
 
 void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 position) { 
