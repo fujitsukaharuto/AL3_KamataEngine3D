@@ -40,7 +40,7 @@ void GameScene::Initialize() {
 
 	player_ = new Player();
 	TextureManager::Load("reticle.png");
-	player_->Initialize(playerModel_, playerTextureHandle_, Vector3{0.0f, 0.0f, 35.0f});
+	player_->Initialize(playerModel_, playerTextureHandle_, Vector3{0.0f, 0.0f, -0.5f});
 
 	enemyTextureHandle_ = TextureManager::Load("virus_character.png");
 

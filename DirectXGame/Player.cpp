@@ -61,6 +61,13 @@ void Player::Update(const ViewProjection& viewProjection)
 		}
 		return false;
 	});
+	targetEnemyList_.remove_if([](Enemy* ene) {
+		if (ene->IsDead()) {
+			return true;
+		}
+		return false;
+	});
+
 
 
 	Rotate();
@@ -92,7 +99,7 @@ void Player::Update(const ViewProjection& viewProjection)
 	worldTransfoem3DReticle_.translation_ = PosPlayer + offset;
 	worldTransfoem3DReticle_.UpdateMatrix();
 
-	ReticleCal(viewProjection);
+	ReticleMouse(viewProjection);
 
 	Attack();
 	for (PlayerBullet* bullet : bullets_) {
