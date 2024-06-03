@@ -118,7 +118,6 @@ void Player::Draw(const ViewProjection& viewProjection)
 	}
 
 	model_->Draw(worldTransfoem3DReticle_, viewProjection);
-
 }
 
 void Player::Move()
