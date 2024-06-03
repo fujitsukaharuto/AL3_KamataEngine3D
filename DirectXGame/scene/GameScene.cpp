@@ -11,9 +11,24 @@ void GameScene::Initialize() {
 	dxCommon_ = DirectXCommon::GetInstance();
 	input_ = Input::GetInstance();
 	audio_ = Audio::GetInstance();
+
+	viewProject_.Initialize();
+
+
+	playerTextureHandle_ = TextureManager::Load("human.png");
+	playerModel_.reset(Model::Create());
+
+	player_ = std::make_unique<Player>();
+	player_->Initialize(playerModel_.get(), playerTextureHandle_, Vector3(0, 0, 0));
+
 }
 
-void GameScene::Update() {}
+void GameScene::Update()
+{
+
+	player_->Update();
+
+}
 
 void GameScene::Draw() {
 
@@ -41,6 +56,10 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>
+
+	player_->Draw(viewProject_);
+
+
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
