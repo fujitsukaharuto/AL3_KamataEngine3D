@@ -7,7 +7,10 @@
 #include "Sprite.h"
 #include "ViewProjection.h"
 #include "WorldTransform.h"
+#include "DebugCamera.h"
 
+#include "Skydome.h"
+#include "Ground.h"
 #include "Player.h"
 
 #include <memory>
@@ -49,12 +52,20 @@ private: // メンバ変数
 	Input* input_ = nullptr;
 	Audio* audio_ = nullptr;
 
+	std::unique_ptr<DebugCamera> debugCamera_ = nullptr;
+	bool isDebugCameraMode_ = false;
 
 	ViewProjection viewProject_;
 
 	uint32_t playerTextureHandle_ = 0;
 	std::unique_ptr<Model> playerModel_ = nullptr;
 	std::unique_ptr<Player> player_;
+
+	std::unique_ptr<Model> skydomeModel_ = nullptr;
+	std::unique_ptr<Skydome> skydome_;
+
+	std::unique_ptr<Model> groundModel_ = nullptr;
+	std::unique_ptr<Ground> ground_;
 
 	/// <summary>
 	/// ゲームシーン用

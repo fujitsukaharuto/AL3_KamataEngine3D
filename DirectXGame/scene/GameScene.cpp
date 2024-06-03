@@ -1,5 +1,7 @@
 #include "GameScene.h"
 #include "TextureManager.h"
+#include "AxisIndicator.h"
+
 #include <cassert>
 
 GameScene::GameScene() {}
@@ -12,14 +14,28 @@ void GameScene::Initialize() {
 	input_ = Input::GetInstance();
 	audio_ = Audio::GetInstance();
 
+	debugCamera_ = std::make_unique<DebugCamera>(1280, 720);
+	AxisIndicator::GetInstance()->SetVisible(true);
+
 	viewProject_.Initialize();
+	AxisIndicator::GetInstance()->SetTargetViewProjection(&viewProject_);
 
+	/*playerTextureHandle_ = TextureManager::Load("human.png");*/
+	playerModel_.reset(Model::CreateFromOBJ("player", true));
+	skydomeModel_.reset(Model::CreateFromOBJ("skydome", true));
+	groundModel_.reset(Model::CreateFromOBJ("ground", true));
 
-	playerTextureHandle_ = TextureManager::Load("human.png");
-	playerModel_.reset(Model::Create());
 
 	player_ = std::make_unique<Player>();
 	player_->Initialize(playerModel_.get(), playerTextureHandle_, Vector3(0, 0, 0));
+
+
+	skydome_ = std::make_unique<Skydome>();
+	skydome_->Initialize(skydomeModel_.get());
+
+
+	ground_ = std::make_unique<Ground>();
+	ground_->Initialize(groundModel_.get());
 
 }
 
@@ -27,6 +43,28 @@ void GameScene::Update()
 {
 
 	player_->Update();
+
+#ifdef _DEBUG
+
+	if (input_->TriggerKey(DIK_F12)) {
+		if (isDebugCameraMode_) {
+			isDebugCameraMode_ = false;
+		} else {
+			isDebugCameraMode_ = true;
+		}
+	}
+
+#endif // _DEBUG
+
+	if (isDebugCameraMode_) {
+		debugCamera_->Update();
+		viewProject_.matView = debugCamera_->GetViewProjection().matView;
+		viewProject_.matProjection = debugCamera_->GetViewProjection().matProjection;
+		viewProject_.TransferMatrix();
+	} else {
+		viewProject_.UpdateMatrix();
+		
+	}
 
 }
 
@@ -57,6 +95,8 @@ void GameScene::Draw() {
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>
 
+	skydome_->Draw(viewProject_);
+	ground_->Draw(viewProject_);
 	player_->Draw(viewProject_);
 
 
