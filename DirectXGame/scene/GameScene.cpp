@@ -19,6 +19,8 @@ void GameScene::Initialize() {
 
 	viewProject_.Initialize();
 	AxisIndicator::GetInstance()->SetTargetViewProjection(&viewProject_);
+	followCamera_ = std::make_unique<FollowCamera>();
+	followCamera_->Initialize();
 
 	/*playerTextureHandle_ = TextureManager::Load("human.png");*/
 	playerModel_.reset(Model::CreateFromOBJ("player", true));
@@ -29,6 +31,8 @@ void GameScene::Initialize() {
 	player_ = std::make_unique<Player>();
 	player_->Initialize(playerModel_.get(), playerTextureHandle_, Vector3(0, 0, 0));
 
+	followCamera_->SetTarget(&player_->GetWorldTransform());
+	player_->SetViewProjection(&followCamera_->GetViewProjection());
 
 	skydome_ = std::make_unique<Skydome>();
 	skydome_->Initialize(skydomeModel_.get());
@@ -43,6 +47,8 @@ void GameScene::Update()
 {
 
 	player_->Update();
+
+	followCamera_->Update();
 
 #ifdef _DEBUG
 
@@ -63,7 +69,9 @@ void GameScene::Update()
 		viewProject_.TransferMatrix();
 	} else {
 		viewProject_.UpdateMatrix();
-		
+		viewProject_.matView = followCamera_->GetViewProjection().matView;
+		viewProject_.matProjection = followCamera_->GetViewProjection().matProjection;
+		viewProject_.TransferMatrix();
 	}
 
 }

@@ -11,6 +11,7 @@
 
 #include "Skydome.h"
 #include "Ground.h"
+#include "FollowCamera.h"
 #include "Player.h"
 
 #include <memory>
@@ -56,6 +57,8 @@ private: // メンバ変数
 	bool isDebugCameraMode_ = false;
 
 	ViewProjection viewProject_;
+
+	std::unique_ptr<FollowCamera> followCamera_;
 
 	uint32_t playerTextureHandle_ = 0;
 	std::unique_ptr<Model> playerModel_ = nullptr;

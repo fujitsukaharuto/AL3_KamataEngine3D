@@ -1,6 +1,10 @@
 #include "Player.h"
+#include "Input.h"
+#include "MathCal.h"
 
 
+#include <cmath>
+#include <iostream>
 #include <cassert>
 
 Player::Player() {}
@@ -12,6 +16,8 @@ void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 position)
 	assert(model);
 	model_ = model;
 	textureHandle_ = textureHandle;
+
+
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = position;
 
@@ -21,8 +27,8 @@ void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 position)
 void Player::Update()
 {
 
-	worldTransform_.TransferMatrix();
-
+	Move();
+	worldTransform_.UpdateMatrix();
 }
 
 void Player::Draw(const ViewProjection& viewProjection)
@@ -32,4 +38,21 @@ void Player::Draw(const ViewProjection& viewProjection)
 
 }
 
+void Player::Move() {
 
+	XINPUT_STATE joyState;
+	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
+
+		Vector3 move = {(float)joyState.Gamepad.sThumbLX / SHRT_MAX, 0, (float)joyState.Gamepad.sThumbLY / SHRT_MAX};
+		const float kCharacterSpeed = 0.3f;
+
+		move = move.Normalize() * kCharacterSpeed;
+		
+		Matrix4x4 rotateCamera = MakeRotateXYZMatrix(viewProjection_->rotation_);
+		
+		move = TransformNormal(move, rotateCamera);
+
+		worldTransform_.translation_ += move;
+		worldTransform_.rotation_.y = std::atan2(move.x, move.z);
+	}
+}

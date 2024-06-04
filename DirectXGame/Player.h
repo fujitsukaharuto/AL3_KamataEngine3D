@@ -1,6 +1,8 @@
 #pragma once
 #include "Model.h"
 #include "WorldTransform.h"
+#include "ViewProjection.h"
+
 
 class Player {
 public:
@@ -26,8 +28,22 @@ public:
 	void Draw(const ViewProjection& viewProjection);
 	
 
+	//Function
+
+	/// <summary>
+	/// 移動
+	/// </summary>
+	void Move();
+
+
+	void SetViewProjection(const ViewProjection* viewProjection) { viewProjection_ = viewProjection; }
+
+
+	const WorldTransform& GetWorldTransform() { return worldTransform_; }
+
 private:
 
+	const ViewProjection* viewProjection_ = nullptr;
 	WorldTransform worldTransform_;
 	Model* model_ = nullptr;
 	uint32_t textureHandle_ = 0u;
