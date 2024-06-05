@@ -223,6 +223,23 @@ Vector3 Sleap(const Vector3& v1, const Vector3& v2, float t) {
 	return newVec * lenrth;
 }
 
+float LerpShortAngle(float a, float b, float t)
+{
+	float diff = b - a;
+	float mpi = 3.14159265f;
+
+	diff = std::fmodf(diff, 2.0f * mpi);
+	if (diff > mpi)
+	{
+		diff -= 2.0f * mpi;
+	} else if (diff < -mpi)
+	{
+		diff += 2.0f * mpi;
+	}
+
+	return a + diff * t;
+}
+
 float Clamp(float x, float min, float max) { return x < min ? min : (x > max ? max : x); }
 
 Vector3 CatmullRomPoint(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t) {
