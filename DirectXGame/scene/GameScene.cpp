@@ -23,13 +23,16 @@ void GameScene::Initialize() {
 	followCamera_->Initialize();
 
 	/*playerTextureHandle_ = TextureManager::Load("human.png");*/
-	playerModel_.reset(Model::CreateFromOBJ("player", true));
+	modelFighterBody_.reset(Model::CreateFromOBJ("playerbody", true));
+	modelFighterHead_.reset(Model::CreateFromOBJ("playerhead", true));
+	modelFighterL_arm_.reset(Model::CreateFromOBJ("playerlefthand", true));
+	modelFighterR_arm_.reset(Model::CreateFromOBJ("playerrighthand", true));
 	skydomeModel_.reset(Model::CreateFromOBJ("skydome", true));
 	groundModel_.reset(Model::CreateFromOBJ("ground", true));
 
 
 	player_ = std::make_unique<Player>();
-	player_->Initialize(playerModel_.get(), playerTextureHandle_, Vector3(0, 0, 0));
+	player_->Initialize(modelFighterBody_.get(), modelFighterHead_.get(), modelFighterL_arm_.get(), modelFighterR_arm_.get(), Vector3(0, 0, 0));
 
 	followCamera_->SetTarget(&player_->GetWorldTransform());
 	player_->SetViewProjection(&followCamera_->GetViewProjection());
@@ -45,7 +48,7 @@ void GameScene::Initialize() {
 
 void GameScene::Update()
 {
-
+	
 	player_->Update();
 
 	followCamera_->Update();

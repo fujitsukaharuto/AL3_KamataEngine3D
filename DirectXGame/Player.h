@@ -14,7 +14,7 @@ public:
 	/// </summary>
 	/// <param name="model">モデル</param>
 	/// <param name="textureHandle">テクスチャハンドル</param>
-	void Initialize(Model* model, uint32_t textureHandle, Vector3 position);
+	void Initialize(Model* modelBody, Model* modelHead, Model* modelL_arm, Model* modelR_arm, Vector3 position);
 
 	/// <summary>
 	/// 更新
@@ -35,16 +35,51 @@ public:
 	/// </summary>
 	void Move();
 
+	/// <summary>
+	/// 浮遊ギミック初期化
+	/// </summary>
+	void InitializeFloatingGimmick();
+
+	/// <summary>
+	/// 浮遊ギミック更新
+	/// </summary>
+	void UpdateFloatingGimmick();
+
+	/// <summary>
+	/// 腕をぶらぶらさせる初期化
+	/// </summary>
+	void InitializeArmGimmick();
+
+	/// <summary>
+	/// 腕をぶらぶらさせる更新
+	/// </summary>
+	void UpdateArmGimmick();
+
 
 	void SetViewProjection(const ViewProjection* viewProjection) { viewProjection_ = viewProjection; }
 
 
-	const WorldTransform& GetWorldTransform() { return worldTransform_; }
+	const WorldTransform& GetWorldTransform() { return worldTransformBase_; }
 
 private:
 
 	const ViewProjection* viewProjection_ = nullptr;
-	WorldTransform worldTransform_;
-	Model* model_ = nullptr;
+	WorldTransform worldTransformBase_;
+	WorldTransform worldTransformBody_;
+	WorldTransform worldTransformHead_;
+	WorldTransform worldTransformL_arm_;
+	WorldTransform worldTransformR_arm_;
+	Model* modelBody_ = nullptr;
+	Model* modelHead_ = nullptr;
+	Model* modelL_arm_ = nullptr;
+	Model* modelR_arm_ = nullptr;
 	uint32_t textureHandle_ = 0u;
+
+	float floatingParameter_ = 0.0f;
+	uint16_t cycle_ = 75;
+	float floatingAmplitude_ = 0.175f;
+
+	float armParameter_ = 0.0f;
+	float armAmplitude_ = 0.175f;
+
 };
