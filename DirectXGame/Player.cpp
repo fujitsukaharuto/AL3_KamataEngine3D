@@ -7,28 +7,29 @@
 #include <iostream>
 #include <cassert>
 
+
+enum PlayerModelIndex {
+	kModelIndexBody = 0,
+	kModelIndexHead = 1,
+	kModelIndexL_arm = 2,
+	kModelIndexR_arm = 3,
+};
+
+
 Player::Player() {}
 
 Player::~Player() {}
 
-void Player::Initialize(Model* modelBody, Model* modelHead, Model* modelL_arm, Model* modelR_arm, Vector3 position) {
-	assert(modelBody);
-	assert(modelHead);
-	assert(modelR_arm);
-	assert(modelL_arm);
-	modelBody_ = modelBody;
-	modelHead_ = modelHead;
-	modelL_arm_ = modelL_arm;
-	modelR_arm_ = modelR_arm;
-	worldTransformBase_.Initialize();
-	worldTransformBase_.translation_ = position;
+void Player::Initialize(const std::vector<Model*>& models) {
+	
+	BaseCharacter::Initialize(models);
 
 	worldTransformBody_.Initialize();
 	worldTransformHead_.Initialize();
 	worldTransformL_arm_.Initialize();
 	worldTransformR_arm_.Initialize();
 
-	worldTransformBody_.parent_ = &worldTransformBase_;
+	worldTransformBody_.parent_ = &worldTransform_;
 	worldTransformHead_.parent_ = &worldTransformBody_;
 	worldTransformL_arm_.parent_ = &worldTransformBody_;
 	worldTransformR_arm_.parent_ = &worldTransformBody_;
@@ -45,7 +46,7 @@ void Player::Update()
 	Move();
 	UpdateFloatingGimmick();
 	UpdateArmGimmick();
-	worldTransformBase_.UpdateMatrix();
+	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
@@ -54,12 +55,10 @@ void Player::Update()
 
 void Player::Draw(const ViewProjection& viewProjection)
 {
-
-	/*model_->Draw(worldTransformBase_, viewProjection);*/
-	modelBody_->Draw(worldTransformBody_, viewProjection);
-	modelHead_->Draw(worldTransformHead_, viewProjection);
-	modelL_arm_->Draw(worldTransformL_arm_, viewProjection);
-	modelR_arm_->Draw(worldTransformR_arm_, viewProjection);
+	models_[kModelIndexBody]->Draw(worldTransformBody_, viewProjection);
+	models_[kModelIndexHead]->Draw(worldTransformHead_, viewProjection);
+	models_[kModelIndexL_arm]->Draw(worldTransformL_arm_, viewProjection);
+	models_[kModelIndexR_arm]->Draw(worldTransformR_arm_, viewProjection);
 
 }
 
@@ -83,10 +82,10 @@ void Player::Move() {
 			Matrix4x4 rotateCamera = MakeRotateXYZMatrix(viewProjection_->rotation_);
 			move = TransformNormal(move, rotateCamera);
 
-			worldTransformBase_.translation_ += move;
+			worldTransform_.translation_ += move;
 			targetRotate = std::atan2(move.x, move.z);
 		}
-		worldTransformBase_.rotation_.y = LerpShortAngle(worldTransformBase_.rotation_.y, targetRotate, 0.075f);
+		worldTransform_.rotation_.y = LerpShortAngle(worldTransform_.rotation_.y, targetRotate, 0.075f);
 	}
 }
 
@@ -119,7 +118,7 @@ void Player::UpdateFloatingGimmick()
 
 	
 	worldTransformBody_.translation_.y = std::sin(floatingParameter_) * floatingAmplitude_;
-
+	
 }
 
 void Player::InitializeArmGimmick()

@@ -1,10 +1,11 @@
 #pragma once
-#include "Model.h"
-#include "WorldTransform.h"
+#include <vector>
+
 #include "ViewProjection.h"
+#include "BaseCharacter.h"
 
 
-class Player {
+class Player : public BaseCharacter {
 public:
 	Player();
 	~Player();
@@ -14,18 +15,18 @@ public:
 	/// </summary>
 	/// <param name="model">モデル</param>
 	/// <param name="textureHandle">テクスチャハンドル</param>
-	void Initialize(Model* modelBody, Model* modelHead, Model* modelL_arm, Model* modelR_arm, Vector3 position);
+	void Initialize(const std::vector<Model*>& models) override;
 
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void Update();
+	void Update() override;
 
 	/// <summary>
 	/// 描画
 	/// </summary>
 	/// <param name="viewProjection">ビュープロジェクション（参照渡し）</param>
-	void Draw(const ViewProjection& viewProjection);
+	void Draw(const ViewProjection& viewProjection) override;
 	
 
 	//Function
@@ -58,21 +59,15 @@ public:
 
 	void SetViewProjection(const ViewProjection* viewProjection) { viewProjection_ = viewProjection; }
 
-
-	const WorldTransform& GetWorldTransform() { return worldTransformBase_; }
-
 private:
 
 	const ViewProjection* viewProjection_ = nullptr;
-	WorldTransform worldTransformBase_;
+
 	WorldTransform worldTransformBody_;
 	WorldTransform worldTransformHead_;
 	WorldTransform worldTransformL_arm_;
 	WorldTransform worldTransformR_arm_;
-	Model* modelBody_ = nullptr;
-	Model* modelHead_ = nullptr;
-	Model* modelL_arm_ = nullptr;
-	Model* modelR_arm_ = nullptr;
+
 	uint32_t textureHandle_ = 0u;
 
 	float floatingParameter_ = 0.0f;

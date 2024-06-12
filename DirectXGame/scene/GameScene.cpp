@@ -27,15 +27,29 @@ void GameScene::Initialize() {
 	modelFighterHead_.reset(Model::CreateFromOBJ("playerhead", true));
 	modelFighterL_arm_.reset(Model::CreateFromOBJ("playerlefthand", true));
 	modelFighterR_arm_.reset(Model::CreateFromOBJ("playerrighthand", true));
+	std::vector<Model*> playerModels = {
+		modelFighterBody_.get(), modelFighterHead_.get(),
+		modelFighterL_arm_.get(), modelFighterR_arm_.get()};
+
+	enemyModelfightBody_.reset(Model::CreateFromOBJ("enemybody", true));
+	enemyModelfightWeapon_.reset(Model::CreateFromOBJ("enemyweapon", true));
+	std::vector<Model*> enemyModels = {
+		enemyModelfightBody_.get(), enemyModelfightWeapon_.get()};
+
 	skydomeModel_.reset(Model::CreateFromOBJ("skydome", true));
 	groundModel_.reset(Model::CreateFromOBJ("ground", true));
 
 
 	player_ = std::make_unique<Player>();
-	player_->Initialize(modelFighterBody_.get(), modelFighterHead_.get(), modelFighterL_arm_.get(), modelFighterR_arm_.get(), Vector3(0, 0, 0));
+	player_->Initialize(playerModels);
 
 	followCamera_->SetTarget(&player_->GetWorldTransform());
 	player_->SetViewProjection(&followCamera_->GetViewProjection());
+
+
+	enemy_ = std::make_unique<Enemy>();
+	enemy_->Initialize(enemyModels);
+
 
 	skydome_ = std::make_unique<Skydome>();
 	skydome_->Initialize(skydomeModel_.get());
@@ -52,6 +66,8 @@ void GameScene::Update()
 	player_->Update();
 
 	followCamera_->Update();
+
+	enemy_->Update();
 
 #ifdef _DEBUG
 
@@ -108,6 +124,7 @@ void GameScene::Draw() {
 
 	skydome_->Draw(viewProject_);
 	ground_->Draw(viewProject_);
+	enemy_->Draw(viewProject_);
 	player_->Draw(viewProject_);
 
 
