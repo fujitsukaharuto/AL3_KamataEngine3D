@@ -30,6 +30,8 @@ public:
 
 	void Move();
 
+	void UpdatePartsGimmick();
+
 private:
 
 	WorldTransform worldTransformBody_;

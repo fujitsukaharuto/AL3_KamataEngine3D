@@ -35,6 +35,7 @@ void Enemy::Update()
 #endif // _DEBUG
 
 	Move();
+	UpdatePartsGimmick();
 
 	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
@@ -54,10 +55,21 @@ void Enemy::Draw(const ViewProjection& viewProjection)
 
 void Enemy::Move()
 {
-
+	float mpi = 3.14159265f;
 	float kCharacterSpeed = 0.2f;
 	Vector3 velocity = {0.0f, 0.0f, -kCharacterSpeed};
 	velocity = TransformNormal(velocity, worldTransform_.matWorld_);
 	worldTransform_.translation_ += velocity;
 	worldTransform_.rotation_.y += 0.05f;
+	worldTransform_.rotation_.y = std::fmod(worldTransform_.rotation_.y, 2.0f * mpi);
+}
+
+void Enemy::UpdatePartsGimmick()
+{
+	float mpi = 3.14159265f;
+	float kPartsRotateSpeed = 0.2f;
+	worldTransformL_arm_.rotation_.x += -kPartsRotateSpeed;
+	worldTransformR_arm_.rotation_.x += -kPartsRotateSpeed;
+	worldTransformL_arm_.rotation_.x = std::fmod(worldTransformL_arm_.rotation_.x, 2.0f * mpi);
+	worldTransformR_arm_.rotation_.x = std::fmod(worldTransformR_arm_.rotation_.x, 2.0f * mpi);
 }
