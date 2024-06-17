@@ -27,9 +27,11 @@ void GameScene::Initialize() {
 	modelFighterHead_.reset(Model::CreateFromOBJ("playerhead", true));
 	modelFighterL_arm_.reset(Model::CreateFromOBJ("playerlefthand", true));
 	modelFighterR_arm_.reset(Model::CreateFromOBJ("playerrighthand", true));
-	std::vector<Model*> playerModels = {
-		modelFighterBody_.get(), modelFighterHead_.get(),
-		modelFighterL_arm_.get(), modelFighterR_arm_.get()};
+	modelPlayerWeapon_.reset(Model::CreateFromOBJ("playerweapon", true));
+	std::vector<Model*> playerModels = {modelFighterBody_.get(), modelFighterHead_.get(),
+		modelFighterL_arm_.get(), modelFighterR_arm_.get(),
+		modelPlayerWeapon_.get()};
+	
 
 	enemyModelfightBody_.reset(Model::CreateFromOBJ("enemybody", true));
 	enemyModelfightWeapon_.reset(Model::CreateFromOBJ("enemyweapon", true));

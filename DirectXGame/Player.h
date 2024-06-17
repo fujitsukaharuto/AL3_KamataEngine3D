@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <optional>
 
 #include "ViewProjection.h"
 #include "BaseCharacter.h"
@@ -9,6 +10,13 @@ class Player : public BaseCharacter {
 public:
 	Player();
 	~Player();
+
+
+	enum class Behavior {
+		kRoot,
+		kAttack,
+	};
+
 
 	/// <summary>
 	/// 初期化
@@ -30,6 +38,17 @@ public:
 	
 
 	//Function
+
+	//通常行動更新
+	void BehaviorRootUpdate();
+	//通常行動初期化
+	void BehaviorRootInitialize();
+
+	//攻撃行動更新
+	void BehaviorAttackUpdate();
+	//攻撃行動初期化
+	void BehaviorAttackInitialize();
+
 
 	/// <summary>
 	/// 移動
@@ -67,6 +86,12 @@ private:
 	WorldTransform worldTransformHead_;
 	WorldTransform worldTransformL_arm_;
 	WorldTransform worldTransformR_arm_;
+	WorldTransform worldTransformWeapon_;
+
+	Behavior behavior_ = Behavior::kRoot;
+	std::optional<Behavior> behaviorRequest_ = std::nullopt;
+	float behaviorTimer_;
+	Vector3 attackMove_;
 
 	uint32_t textureHandle_ = 0u;
 
