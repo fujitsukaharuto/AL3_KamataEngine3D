@@ -15,6 +15,15 @@ public:
 	enum class Behavior {
 		kRoot,
 		kAttack,
+		kDash,
+	};
+
+
+	struct WorkDash 
+	{
+	
+		uint32_t dashParameter_ = 0;
+	
 	};
 
 
@@ -49,6 +58,10 @@ public:
 	//攻撃行動初期化
 	void BehaviorAttackInitialize();
 
+	//ダッシュ行動更新
+	void BehaviorDashUpdate();
+	//ダッシュ行動初期化
+	void BehaviorDashInitialize();
 
 	/// <summary>
 	/// 移動
@@ -101,5 +114,9 @@ private:
 
 	float armParameter_ = 0.0f;
 	float armAmplitude_ = 0.175f;
+
+
+	WorkDash workDash_;
+	float destinationAngleY_ = 0;
 
 };

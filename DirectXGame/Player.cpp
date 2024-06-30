@@ -62,6 +62,9 @@ void Player::Update()
 		case Behavior::kAttack:
 			BehaviorAttackInitialize();
 			break;
+		case Behavior::kDash:
+			BehaviorDashInitialize();
+			break;
 		}
 		behaviorRequest_ = std::nullopt;
 	}
@@ -72,6 +75,9 @@ void Player::Update()
 		break;
 	case Behavior::kAttack:
 		BehaviorAttackUpdate();
+		break;
+	case Behavior::kDash:
+		BehaviorDashUpdate();
 		break;
 	}
 
@@ -116,7 +122,14 @@ void Player::BehaviorRootUpdate()
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
 
+	XINPUT_STATE joyState;
+	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
+		if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_X) {
 
+			behaviorRequest_ = Behavior::kDash;
+
+		}
+	}
 }
 
 void Player::BehaviorRootInitialize()
@@ -175,6 +188,38 @@ void Player::BehaviorAttackInitialize()
 	attackMove_ = {0.0f, 0.0f, 0.2f};
 }
 
+void Player::BehaviorDashUpdate()
+{
+
+	const float kCharacterSpeed = 1.5f;
+	Vector3 move = {0.0f, 0.0f, 1.0f};
+	move = move.Normalize() * kCharacterSpeed;
+	Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+	move = TransformNormal(move, rotatePlayer);
+	worldTransform_.translation_ += move;
+
+	BaseCharacter::Update();
+	worldTransformBody_.UpdateMatrix();
+	worldTransformHead_.UpdateMatrix();
+	worldTransformL_arm_.UpdateMatrix();
+	worldTransformR_arm_.UpdateMatrix();
+
+	const uint32_t behaviorDashTime = 20;
+
+	if (++workDash_.dashParameter_ >= behaviorDashTime){
+		behaviorRequest_ = Behavior::kRoot;
+	}
+
+}
+
+void Player::BehaviorDashInitialize()
+{
+
+	workDash_.dashParameter_ = 0;
+	worldTransform_.rotation_.y = destinationAngleY_;
+
+}
+
 void Player::Move() {
 
 	XINPUT_STATE joyState;
@@ -189,6 +234,7 @@ void Player::Move() {
 		}
 
 		float targetRotate = 0;
+		destinationAngleY_ = targetRotate;
 		if (ismoving) {
 			const float kCharacterSpeed = 0.3f;
 			move = move.Normalize() * kCharacterSpeed;
@@ -197,6 +243,7 @@ void Player::Move() {
 
 			worldTransform_.translation_ += move;
 			targetRotate = std::atan2(move.x, move.z);
+			destinationAngleY_ = targetRotate;
 		}
 		worldTransform_.rotation_.y = LerpShortAngle(worldTransform_.rotation_.y, targetRotate, 0.075f);
 	}
