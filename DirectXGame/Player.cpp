@@ -2,6 +2,7 @@
 #include "Input.h"
 #include "MathCal.h"
 #include "ImGuiManager.h"
+#include "GlobalVariables.h"
 
 #include <cmath>
 #include <iostream>
@@ -24,6 +25,11 @@ Player::~Player() {}
 void Player::Initialize(const std::vector<Model*>& models) {
 	
 	BaseCharacter::Initialize(models);
+
+	GlobalVariables* globalvariables = GlobalVariables::GetInstance();
+	const char* groupName = "Player";
+	GlobalVariables::GetInstance()->CreateGroup(groupName);
+	globalvariables->SetValue(groupName, "Test", Vector3(0.0f,0.0f,1.0f));
 
 	worldTransformBody_.Initialize();
 	worldTransformHead_.Initialize();
