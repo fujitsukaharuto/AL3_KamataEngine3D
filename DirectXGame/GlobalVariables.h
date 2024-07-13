@@ -1,7 +1,9 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <variant>
 #include <map>
+#include <json.hpp>
 
 #include "Vector3.h"
 
@@ -33,14 +35,25 @@ public:
 	// 値のセット(Vector3)
 	void SetValue(const std::string& groupName, const std::string& key, Vector3 value);
 
+	void SaveFile(const std::string& groupName);
+
 	/// <summary>
 	/// 毎フレーム処理
 	/// </summary>
 	void Update();
+
+
+	//グローバル変数の保存先ファイルパス
+	const std::string kDirectoryPath = "Resources/GlobalVariables/";
+
 
 private:
 	GlobalVariables() = default;
 	~GlobalVariables() = default;
 	GlobalVariables(const GlobalVariables&) = delete;
 	GlobalVariables& operator=(const GlobalVariables&) = delete;
+
+
+	using json = nlohmann::json;
+
 };
