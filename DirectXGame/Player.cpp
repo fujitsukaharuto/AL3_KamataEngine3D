@@ -29,7 +29,7 @@ void Player::Initialize(const std::vector<Model*>& models) {
 	GlobalVariables* globalvariables = GlobalVariables::GetInstance();
 	const char* groupName = "Player";
 	GlobalVariables::GetInstance()->CreateGroup(groupName);
-	globalvariables->SetValue(groupName, "Test", int32_t(20));
+	globalvariables->AddItem(groupName, "Test", int32_t(26));
 
 	worldTransformBody_.Initialize();
 	worldTransformHead_.Initialize();
@@ -43,10 +43,19 @@ void Player::Initialize(const std::vector<Model*>& models) {
 	worldTransformR_arm_.parent_ = &worldTransformBody_;
 	worldTransformWeapon_.parent_ = &worldTransformBody_;
 
-	worldTransformHead_.translation_ = {0.0f, 1.65f, 0.0f};
+	/*worldTransformHead_.translation_ = {0.0f, 1.65f, 0.0f};
 	worldTransformL_arm_.translation_ = {-0.59f, 1.65f, 0.0f};
-	worldTransformR_arm_.translation_ = {0.59f, 1.65f, 0.0f};
+	worldTransformR_arm_.translation_ = {0.59f, 1.65f, 0.0f};*/
 	worldTransformWeapon_.translation_ = {0.0f, 0.9f, -0.3f};
+
+	globalvariables->AddItem(groupName, "Head Translation", worldTransformHead_.translation_);
+	globalvariables->AddItem(groupName, "ArmL Translation", worldTransformL_arm_.translation_);
+	globalvariables->AddItem(groupName, "ArmR Translation", worldTransformR_arm_.translation_);
+	globalvariables->AddItem(groupName, "floatingCycle", cycle_);
+	globalvariables->AddItem(groupName, "floatingAmplitude", floatingAmplitude_);
+
+	ApplyGlobalVariables();
+
 	InitializeFloatingGimmick();
 	InitializeArmGimmick();
 	worldTransformBody_.UpdateMatrix();
@@ -313,4 +322,16 @@ void Player::UpdateArmGimmick()
 	worldTransformR_arm_.rotation_.z = -(std::sin(armParameter_) * armAmplitude_);
 	worldTransformL_arm_.rotation_.x = std::sin(armParameter_) * armAmplitude_;
 	worldTransformR_arm_.rotation_.x = std::sin(armParameter_) * armAmplitude_;
+}
+
+void Player::ApplyGlobalVariables() 
+{
+	GlobalVariables* globalVariables = GlobalVariables::GetInstance();
+	const char* groupName = "Player";
+	worldTransformHead_.translation_ = globalVariables->GetVector3Value(groupName, "Head Translation");
+	worldTransformL_arm_.translation_ = globalVariables->GetVector3Value(groupName, "ArmL Translation");
+	worldTransformR_arm_.translation_ = globalVariables->GetVector3Value(groupName, "ArmR Translation");
+	cycle_ = uint16_t(globalVariables->GetIntValue(groupName, "floatingCycle"));
+	floatingAmplitude_ = globalVariables->GetFloatValue(groupName, "floatingAmplitude");
+
 }

@@ -91,6 +91,9 @@ public:
 
 	void SetViewProjection(const ViewProjection* viewProjection) { viewProjection_ = viewProjection; }
 
+	//調整項目の適用
+	void ApplyGlobalVariables();
+
 private:
 
 	const ViewProjection* viewProjection_ = nullptr;
