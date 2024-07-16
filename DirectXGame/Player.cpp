@@ -80,6 +80,9 @@ void Player::Update()
 		case Behavior::kDash:
 			BehaviorDashInitialize();
 			break;
+		case Behavior::kJump:
+			BehaviorJumpInitialize();
+			break;
 		}
 		behaviorRequest_ = std::nullopt;
 	}
@@ -93,6 +96,9 @@ void Player::Update()
 		break;
 	case Behavior::kDash:
 		BehaviorDashUpdate();
+		break;
+	case Behavior::kJump:
+		BehaviorJumpUpdate();
 		break;
 	}
 
@@ -143,6 +149,11 @@ void Player::BehaviorRootUpdate()
 
 			behaviorRequest_ = Behavior::kDash;
 
+		}
+		if (1) {
+			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_B) {
+				behaviorRequest_ = Behavior::kJump;
+			}
 		}
 	}
 }
@@ -235,6 +246,37 @@ void Player::BehaviorDashInitialize()
 
 }
 
+void Player::BehaviorJumpUpdate()
+{
+
+	worldTransform_.translation_ += velocity_;
+	const float kGravityAcceleration = 0.05f;
+	Vector3 accelerationVector = {0.0f, -kGravityAcceleration, 0.0f};
+	velocity_ += accelerationVector;
+
+	if (worldTransform_.translation_.y <= 0.0f)
+	{
+		worldTransform_.translation_.y = 0.0f;
+		behaviorRequest_ = Behavior::kRoot;
+	}
+
+}
+
+void Player::BehaviorJumpInitialize()
+{
+
+	worldTransformBody_.translation_.y = 0;
+	worldTransformL_arm_.rotation_.x = 0;
+	worldTransformL_arm_.rotation_.z = 0;
+	worldTransformR_arm_.rotation_.x = 0;
+	worldTransformR_arm_.rotation_.z = 0;
+
+	//ジャンプ初速度
+	const float kJumpFirstSpeed = 1.0f;
+	velocity_.y = kJumpFirstSpeed;
+
+}
+
 void Player::Move() {
 
 	XINPUT_STATE joyState;
@@ -243,8 +285,8 @@ void Player::Move() {
 		const float threshold = 0.7f;
 		bool ismoving = false;
 
-		Vector3 move = {(float)joyState.Gamepad.sThumbLX / SHRT_MAX, 0, (float)joyState.Gamepad.sThumbLY / SHRT_MAX};
-		if (move.Lenght() > threshold) {
+		velocity_ = {(float)joyState.Gamepad.sThumbLX / SHRT_MAX, 0, (float)joyState.Gamepad.sThumbLY / SHRT_MAX};
+		if (velocity_.Lenght() > threshold) {
 			ismoving = true;
 		}
 
@@ -252,12 +294,12 @@ void Player::Move() {
 		destinationAngleY_ = targetRotate;
 		if (ismoving) {
 			const float kCharacterSpeed = 0.3f;
-			move = move.Normalize() * kCharacterSpeed;
+			velocity_ = velocity_.Normalize() * kCharacterSpeed;
 			Matrix4x4 rotateCamera = MakeRotateXYZMatrix(viewProjection_->rotation_);
-			move = TransformNormal(move, rotateCamera);
+			velocity_ = TransformNormal(velocity_, rotateCamera);
 
-			worldTransform_.translation_ += move;
-			targetRotate = std::atan2(move.x, move.z);
+			worldTransform_.translation_ += velocity_;
+			targetRotate = std::atan2(velocity_.x, velocity_.z);
 			destinationAngleY_ = targetRotate;
 		}
 		worldTransform_.rotation_.y = LerpShortAngle(worldTransform_.rotation_.y, targetRotate, 0.075f);

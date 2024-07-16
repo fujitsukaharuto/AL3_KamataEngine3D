@@ -16,6 +16,7 @@ public:
 		kRoot,
 		kAttack,
 		kDash,
+		kJump,
 	};
 
 
@@ -46,22 +47,28 @@ public:
 	void Draw(const ViewProjection& viewProjection) override;
 	
 
-	//Function
+	// Function
 
-	//通常行動更新
+	// 通常行動更新
 	void BehaviorRootUpdate();
-	//通常行動初期化
+	// 通常行動初期化
 	void BehaviorRootInitialize();
 
-	//攻撃行動更新
+	// 攻撃行動更新
 	void BehaviorAttackUpdate();
-	//攻撃行動初期化
+	// 攻撃行動初期化
 	void BehaviorAttackInitialize();
 
-	//ダッシュ行動更新
+	// ダッシュ行動更新
 	void BehaviorDashUpdate();
-	//ダッシュ行動初期化
+	// ダッシュ行動初期化
 	void BehaviorDashInitialize();
+
+	// ジャンプ行動更新
+	void BehaviorJumpUpdate();
+	// ジャンプ行動初期化
+	void BehaviorJumpInitialize();
+
 
 	/// <summary>
 	/// 移動
@@ -108,6 +115,8 @@ private:
 	std::optional<Behavior> behaviorRequest_ = std::nullopt;
 	float behaviorTimer_;
 	Vector3 attackMove_;
+
+	Vector3 velocity_ = {};
 
 	uint32_t textureHandle_ = 0u;
 
