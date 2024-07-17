@@ -260,11 +260,17 @@ void Player::BehaviorJumpUpdate()
 		behaviorRequest_ = Behavior::kRoot;
 	}
 
+	BaseCharacter::Update();
+	worldTransformBody_.UpdateMatrix();
+	worldTransformHead_.UpdateMatrix();
+	worldTransformL_arm_.UpdateMatrix();
+	worldTransformR_arm_.UpdateMatrix();
+
 }
 
 void Player::BehaviorJumpInitialize()
 {
-
+	worldTransform_.rotation_.y = destinationAngleY_;
 	worldTransformBody_.translation_.y = 0;
 	worldTransformL_arm_.rotation_.x = 0;
 	worldTransformL_arm_.rotation_.z = 0;
