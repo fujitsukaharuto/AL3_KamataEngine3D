@@ -14,8 +14,10 @@
 #include "FollowCamera.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "LockOn.h"
 
 #include <memory>
+
 
 
 /// <summary>
@@ -59,6 +61,8 @@ private: // メンバ変数
 
 	ViewProjection viewProject_;
 
+	std::unique_ptr<LockOn> lockOn_;
+
 	std::unique_ptr<FollowCamera> followCamera_;
 
 	uint32_t playerTextureHandle_ = 0;
@@ -72,7 +76,7 @@ private: // メンバ変数
 
 	std::unique_ptr<Model> enemyModelfightBody_;
 	std::unique_ptr<Model> enemyModelfightWeapon_;
-	std::unique_ptr<Enemy> enemy_;
+	std::list<std::unique_ptr<Enemy>> enemies_;
 
 	std::unique_ptr<Model> skydomeModel_ = nullptr;
 	std::unique_ptr<Skydome> skydome_;

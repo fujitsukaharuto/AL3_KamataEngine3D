@@ -32,6 +32,8 @@ public:
 
 	void UpdatePartsGimmick();
 
+	 Vector3 GetCenterWorldPosition() const;
+
 private:
 
 	WorldTransform worldTransformBody_;

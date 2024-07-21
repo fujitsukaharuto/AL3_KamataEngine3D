@@ -22,6 +22,10 @@ void GameScene::Initialize() {
 	followCamera_ = std::make_unique<FollowCamera>();
 	followCamera_->Initialize();
 
+	lockOn_ = std::make_unique<LockOn>();
+	lockOn_->Initialize();
+
+
 	/*playerTextureHandle_ = TextureManager::Load("human.png");*/
 	modelFighterBody_.reset(Model::CreateFromOBJ("playerbody", true));
 	modelFighterHead_.reset(Model::CreateFromOBJ("playerhead", true));
@@ -49,8 +53,13 @@ void GameScene::Initialize() {
 	player_->SetViewProjection(&followCamera_->GetViewProjection());
 
 
-	enemy_ = std::make_unique<Enemy>();
-	enemy_->Initialize(enemyModels);
+	for (int i = 0; i < 3; i++) {
+		enemies_.push_back(std::make_unique<Enemy>());
+	}
+	for (std::unique_ptr<Enemy>& enemy : enemies_) {
+		enemy->Initialize(enemyModels);
+	}
+	
 
 
 	skydome_ = std::make_unique<Skydome>();
@@ -69,7 +78,11 @@ void GameScene::Update()
 
 	followCamera_->Update();
 
-	enemy_->Update();
+	for (std::unique_ptr<Enemy>& enemy : enemies_) {
+		enemy->Update();
+	}
+
+	lockOn_->Update(enemies_, viewProject_);
 
 #ifdef _DEBUG
 
@@ -126,7 +139,9 @@ void GameScene::Draw() {
 
 	skydome_->Draw(viewProject_);
 	ground_->Draw(viewProject_);
-	enemy_->Draw(viewProject_);
+	for (std::unique_ptr<Enemy>& enemy : enemies_) {
+		enemy->Draw(viewProject_);
+	}
 	player_->Draw(viewProject_);
 
 
@@ -142,6 +157,8 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに前景スプライトの描画処理を追加できる
 	/// </summary>
+
+	lockOn_->Draw();
 
 	// スプライト描画後処理
 	Sprite::PostDraw();

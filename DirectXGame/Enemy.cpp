@@ -73,3 +73,10 @@ void Enemy::UpdatePartsGimmick()
 	worldTransformL_arm_.rotation_.x = std::fmod(worldTransformL_arm_.rotation_.x, 2.0f * mpi);
 	worldTransformR_arm_.rotation_.x = std::fmod(worldTransformR_arm_.rotation_.x, 2.0f * mpi);
 }
+
+ Vector3 Enemy::GetCenterWorldPosition() const
+{
+	const Vector3 offset = {0.0f, 1.0f, 0.0f};
+	 Vector3 worldPos = Transform(offset, worldTransformBody_.matWorld_);
+	return worldPos;
+}
