@@ -48,8 +48,10 @@ void GameScene::Initialize() {
 
 	player_ = std::make_unique<Player>();
 	player_->Initialize(playerModels);
+	player_->SetLockOn(lockOn_.get());
 
 	followCamera_->SetTarget(&player_->GetWorldTransform());
+	followCamera_->SetLockOn(lockOn_.get());
 	player_->SetViewProjection(&followCamera_->GetViewProjection());
 
 

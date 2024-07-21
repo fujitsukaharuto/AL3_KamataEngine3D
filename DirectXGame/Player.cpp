@@ -3,6 +3,7 @@
 #include "MathCal.h"
 #include "ImGuiManager.h"
 #include "GlobalVariables.h"
+#include "LockOn.h"
 
 #include <cmath>
 #include <iostream>
@@ -170,21 +171,38 @@ void Player::BehaviorAttackUpdate()
 {
 #ifdef _DEBUG
 
-	ImGui::Begin("Player");
+	ImGui::Begin("PlayerAttack");
 	ImGui::SliderFloat3("ArmL Translation", &worldTransformL_arm_.translation_.x, 1.0f, 1.0f);
 	ImGui::SliderFloat3("ArmL Rotate", &worldTransformL_arm_.rotation_.x, -4.0f, 4.0f);
 	ImGui::SliderFloat3("ArmR Translation", &worldTransformR_arm_.translation_.x, 1.0f, 1.0f);
 	ImGui::SliderFloat3("ArmR Rotate", &worldTransformR_arm_.rotation_.x, -4.0f, 4.0f);
+	ImGui::Text("attackSpeed:%f", attackSpeed_);
 	ImGui::End();
 
 #endif // _DEBUG
 
-	if (behaviorTimer_>45) {
-		Vector3 move = {0.0f, 0.0f, 0.2f};
-		Matrix4x4 rotateBody = MakeRotateXYZMatrix(worldTransform_.rotation_);
-		move = TransformNormal(move, rotateBody);
+	if (lockOn_ && lockOn_->ExistTarget()) {
+		Vector3 lockOnPosition = lockOn_->GetTargetPosition();
+		Vector3 sub = lockOnPosition - worldTransform_.translation_;
 
-		worldTransform_.translation_ += move;
+		float distance = sub.Lenght();
+		const float threshold = 1.0f; 
+
+		if (distance > threshold) {
+			worldTransform_.rotation_.y = std::atan2(sub.x, sub.z);
+
+			if (attackSpeed_ > distance - threshold) {
+				attackSpeed_ = distance - threshold;
+			}
+		}
+	}
+
+	if (behaviorTimer_>45) {
+		attackMove_ = {0.0f, 0.0f, attackSpeed_};
+		Matrix4x4 rotateBody = MakeRotateXYZMatrix(worldTransform_.rotation_);
+		attackMove_ = TransformNormal(attackMove_, rotateBody);
+
+		worldTransform_.translation_ += attackMove_;
 	}
 
 	worldTransformL_arm_.rotation_.x = LerpShortAngle(worldTransformL_arm_.rotation_.x, -1.36f, 0.15f);
@@ -211,7 +229,8 @@ void Player::BehaviorAttackInitialize()
 	worldTransformL_arm_.rotation_ = {-3.36f, 0.0f, -0.416f};
 	worldTransformR_arm_.rotation_ = {-3.36f, 0.0f, 0.416f};
 	worldTransformWeapon_.rotation_ = {-0.2f, 0.0f, 0.0f};
-	attackMove_ = {0.0f, 0.0f, 0.2f};
+	attackSpeed_ = 0.2f;
+	attackMove_ = {0.0f, 0.0f, attackSpeed_};
 }
 
 void Player::BehaviorDashUpdate()
@@ -307,8 +326,15 @@ void Player::Move() {
 			worldTransform_.translation_ += velocity_;
 			targetRotate = std::atan2(velocity_.x, velocity_.z);
 			destinationAngleY_ = targetRotate;
+			worldTransform_.rotation_.y = LerpShortAngle(worldTransform_.rotation_.y, targetRotate, 0.075f);
+
+		} else if (lockOn_ && lockOn_->ExistTarget()) {
+			Vector3 lockOnPosition = lockOn_->GetTargetPosition();
+			Vector3 sub = lockOnPosition - worldTransform_.translation_;
+
+			worldTransform_.rotation_.y = std::atan2(sub.x, sub.z);
+
 		}
-		worldTransform_.rotation_.y = LerpShortAngle(worldTransform_.rotation_.y, targetRotate, 0.075f);
 	}
 }
 
@@ -372,8 +398,14 @@ void Player::UpdateArmGimmick()
 	worldTransformR_arm_.rotation_.x = std::sin(armParameter_) * armAmplitude_;
 }
 
-void Player::ApplyGlobalVariables() 
+void Player::SetLockOn(const LockOn* target)
 {
+
+	lockOn_ = target;
+
+}
+
+void Player::ApplyGlobalVariables() {
 	GlobalVariables* globalVariables = GlobalVariables::GetInstance();
 	const char* groupName = "Player";
 	worldTransformHead_.translation_ = globalVariables->GetVector3Value(groupName, "Head Translation");

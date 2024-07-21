@@ -36,6 +36,10 @@ public:
 
 	Vector3 WorldToScreen(Vector3 worldPosition, const ViewProjection& viewProjection);
 
+	Vector3 GetTargetPosition() const;
+
+	bool ExistTarget() const;
+
 private:
 	std::unique_ptr<Sprite> lockOnMark_;
 	uint32_t lockOnMarkHandle_ = 0;

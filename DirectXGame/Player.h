@@ -6,6 +6,8 @@
 #include "BaseCharacter.h"
 
 
+class LockOn;
+
 class Player : public BaseCharacter {
 public:
 	Player();
@@ -98,6 +100,8 @@ public:
 
 	void SetViewProjection(const ViewProjection* viewProjection) { viewProjection_ = viewProjection; }
 
+	void SetLockOn(const LockOn* target);
+
 	//調整項目の適用
 	void ApplyGlobalVariables();
 
@@ -115,6 +119,7 @@ private:
 	std::optional<Behavior> behaviorRequest_ = std::nullopt;
 	float behaviorTimer_;
 	Vector3 attackMove_;
+	float attackSpeed_ = 0.2f;
 
 	Vector3 velocity_ = {};
 
@@ -130,5 +135,7 @@ private:
 
 	WorkDash workDash_;
 	float destinationAngleY_ = 0;
+
+	const LockOn* lockOn_ = nullptr;
 
 };

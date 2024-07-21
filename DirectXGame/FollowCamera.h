@@ -2,6 +2,8 @@
 #include "ViewProjection.h"
 #include "WorldTransform.h"
 
+class LockOn;
+
 class FollowCamera {
 public:
 	FollowCamera();
@@ -20,6 +22,7 @@ public:
 
 	void SetTarget(const WorldTransform* target);
 
+	void SetLockOn(const LockOn* target);
 
 	void Reset();
 
@@ -32,4 +35,5 @@ private:
 	const WorldTransform* target_ = nullptr;
 	Vector3 interTarget_ = {};
 	float destinationAngleY_ = 0;
+	const LockOn* lockOn_ = nullptr;
 };
