@@ -375,3 +375,14 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 
 	return result;
 }
+
+bool IsCollision(const Sphere& s1, const Sphere& s2) {
+
+	Vector3 dis = s2.ceneter - s1.ceneter;
+	float leng = dis.Lenght();
+	if (leng < (s1.radius + s2.radius)) {
+		return true;
+	}
+
+	return false;
+}

@@ -15,6 +15,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "LockOn.h"
+#include "CollisionManager.h"
 
 #include <memory>
 
@@ -51,6 +52,11 @@ public: // メンバ関数
 	/// </summary>
 	void Draw();
 
+	/// <summary>
+	/// 衝突判定と応答
+	/// </summary>
+	void CheckAllCollisions();
+
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
@@ -64,6 +70,8 @@ private: // メンバ変数
 	std::unique_ptr<LockOn> lockOn_;
 
 	std::unique_ptr<FollowCamera> followCamera_;
+
+	std::unique_ptr<CollisionManager> collisionManager_;
 
 	uint32_t playerTextureHandle_ = 0;
 	std::unique_ptr<Model> modelFighterBody_;

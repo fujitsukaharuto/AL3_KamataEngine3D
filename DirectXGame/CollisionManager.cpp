@@ -1,0 +1,53 @@
+#include "CollisionManager.h"
+#include "MathCal.h"
+
+void CollisionManager::Reset() {
+
+	colliders_.clear();
+
+}
+
+void CollisionManager::CheckCollisionPair(Collider* colliderA, Collider* colliderB) {
+
+	Vector3 positionA = colliderA->GetCenterPosition();
+	Vector3 positionB = colliderB->GetCenterPosition();
+
+	Vector3 subtract = positionB - positionA;
+	float distance = subtract.Lenght();
+
+	if (distance < colliderA->GetRadius()+colliderB->GetRadius()) {
+
+		colliderA->OnCollision();
+
+		colliderB->OnCollision();
+
+	}
+
+}
+
+void CollisionManager::CheckAllCollisions() {
+
+	std::list<Collider*>::iterator itrA = colliders_.begin();
+	for (; itrA != colliders_.end(); ++itrA) {
+		Collider* colliderA = *itrA;
+
+		// イテレータBはイテレータAの次の要素から回す(重複判定を回避)
+		std::list<Collider*>::iterator itrB = itrA;
+		itrB++;
+
+		for (; itrB != colliders_.end(); ++itrB) {
+
+			Collider* colliderB = *itrB;
+
+			//ペアの当たり判定
+			CheckCollisionPair(colliderA, colliderB);
+		}
+	}
+
+}
+
+void CollisionManager::AddCollider(Collider* collider) {
+
+	colliders_.push_back(collider);
+
+}

@@ -47,7 +47,7 @@ void LockOn::Update(const std::list<std::unique_ptr<Enemy>>& enemies, const View
 
 	if (target_) {
 
-		Vector3 positionWorld = target_->GetCenterWorldPosition();
+		Vector3 positionWorld = target_->GetCenterPosition();
 		Vector3 positionScreen = WorldToScreen(positionWorld, viewProjection);
 		Vector2 positionScreenV2(positionScreen.x, positionScreen.y);
 
@@ -71,7 +71,7 @@ void LockOn::Search(const std::list<std::unique_ptr<Enemy>>& enemies, const View
 	// すべての敵にロックオン判定
 	for (const std::unique_ptr<Enemy>& enemy : enemies) {
 
-		Vector3 positionWorld = enemy->GetCenterWorldPosition();
+		Vector3 positionWorld = enemy->GetCenterPosition();
 
 		Vector3 positionView = Transform(positionWorld, viewProjection.matView);
 
@@ -105,7 +105,7 @@ void LockOn::Search(const std::list<std::unique_ptr<Enemy>>& enemies, const View
 bool LockOn::SearchAreaAngle(const ViewProjection& viewProjection)
 {
 	
-	Vector3 positionWorld = target_->GetCenterWorldPosition();
+	Vector3 positionWorld = target_->GetCenterPosition();
 	Vector3 positionView = Transform(positionWorld, viewProjection.matView);
 
 	if (minDistance_ <= positionView.z && positionView.z <= maxDistance_) {
@@ -140,7 +140,7 @@ Vector3 LockOn::WorldToScreen(Vector3 worldPosition, const ViewProjection& viewP
 Vector3 LockOn::GetTargetPosition() const {
 
 	if (target_) {
-		return target_->GetCenterWorldPosition();
+		return target_->GetCenterPosition();
 	}
 
 	return Vector3();

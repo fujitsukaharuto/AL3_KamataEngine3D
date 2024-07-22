@@ -97,10 +97,13 @@ public:
 	/// </summary>
 	void UpdateArmGimmick();
 
+	void OnCollision() override;
 
 	void SetViewProjection(const ViewProjection* viewProjection) { viewProjection_ = viewProjection; }
 
 	void SetLockOn(const LockOn* target);
+
+	Vector3 GetCenterPosition() const override;
 
 	//調整項目の適用
 	void ApplyGlobalVariables();

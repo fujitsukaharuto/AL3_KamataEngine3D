@@ -25,6 +25,7 @@ void GameScene::Initialize() {
 	lockOn_ = std::make_unique<LockOn>();
 	lockOn_->Initialize();
 
+	collisionManager_ = std::make_unique<CollisionManager>();
 
 	/*playerTextureHandle_ = TextureManager::Load("human.png");*/
 	modelFighterBody_.reset(Model::CreateFromOBJ("playerbody", true));
@@ -85,6 +86,8 @@ void GameScene::Update()
 	}
 
 	lockOn_->Update(enemies_, viewProject_);
+
+	CheckAllCollisions();
 
 #ifdef _DEBUG
 
@@ -166,4 +169,18 @@ void GameScene::Draw() {
 	Sprite::PostDraw();
 
 #pragma endregion
+}
+
+void GameScene::CheckAllCollisions() {
+
+	collisionManager_->Reset();
+
+	collisionManager_->AddCollider(player_.get());
+	//敵について
+	for (const std::unique_ptr<Enemy>&  enemy : enemies_) {
+		collisionManager_->AddCollider(enemy.get());
+	}
+
+	collisionManager_->CheckAllCollisions();
+
 }

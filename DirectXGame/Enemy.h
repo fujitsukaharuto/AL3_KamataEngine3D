@@ -32,7 +32,7 @@ public:
 
 	void UpdatePartsGimmick();
 
-	 Vector3 GetCenterWorldPosition() const;
+	 Vector3 GetCenterPosition() const override;
 
 private:
 

@@ -3,9 +3,10 @@
 
 #include "Model.h"
 #include "WorldTransform.h"
+#include "Collider.h"
 
 
-class BaseCharacter {
+class BaseCharacter : public Collider {
 public:
 	BaseCharacter();
 	~BaseCharacter();
@@ -17,6 +18,8 @@ public:
 	virtual void Draw(const ViewProjection& viewProjection);
 
 	const WorldTransform& GetWorldTransform() { return worldTransform_; }
+
+	virtual Vector3 GetCenterPosition() const override;
 
 protected:
 	std::vector<Model*> models_;
