@@ -1,6 +1,5 @@
 #pragma once
 #include "Collider.h"
-#include "Vector3.h"
 
 #include <list>
 
@@ -8,6 +7,12 @@ class CollisionManager {
 public:
 	CollisionManager() = default;
 	~CollisionManager() = default;
+
+	void Initialize();
+
+	void UpdateWorldTransform();
+
+	void Draw(const ViewProjection& viewProjection);
 
 	void Reset();
 
@@ -22,8 +27,13 @@ public:
 
 	void AddCollider(Collider* collider);
 
+	// 調整項目の適用
+	void ApplyGlobalVariables();
+
 private:
 
 	std::list<Collider*> colliders_;
+	std::unique_ptr<Model> icoModel_;
+	bool isShowCollision_ = false;
 
 };

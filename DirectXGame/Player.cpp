@@ -68,6 +68,8 @@ void Player::Initialize(const std::vector<Model*>& models) {
 
 void Player::Update()
 {
+	ApplyGlobalVariables();
+
 	if (behaviorRequest_) {
 		behavior_ = behaviorRequest_.value();
 		switch (behavior_) {

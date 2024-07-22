@@ -51,6 +51,17 @@ void GlobalVariables::SetValue(const std::string& groupName,
 	group.items[key] = newItem;
 }
 
+void GlobalVariables::SetValue(const std::string& groupName, const std::string& key, bool value) {
+
+	// グループの参照取得
+	Group& group = datas_[groupName];
+	// 新しい項目のデータ設定
+	Item newItem{};
+	newItem.value = value;
+	// 設定した項目をstd::mapに追加
+	group.items[key] = newItem;
+}
+
 void GlobalVariables::SaveFile(const std::string& groupName)
 {
 	// グループを検索
@@ -87,6 +98,10 @@ void GlobalVariables::SaveFile(const std::string& groupName)
 		else if (std::holds_alternative<Vector3>(item.value)) {
 			Vector3 value = std::get<Vector3>(item.value);
 			root[groupName][itemName] = json::array({value.x, value.y, value.z});
+		}
+		// bool型の値を保持
+		else if (std::holds_alternative<bool>(item.value)) {
+			root[groupName][itemName] = std::get<bool>(item.value);
 		}
 	}
 
@@ -194,6 +209,11 @@ void GlobalVariables::LoadFile(const std::string& groupName)
 			Vector3 value = {itItem->at(0), itItem->at(1), itItem->at(2)};
 			SetValue(groupName, itemName, value);
 		}
+		// bool型の値を保持
+		else if (itItem->is_number_float()) {
+			bool value = itItem->get<bool>();
+			SetValue(groupName, itemName, (value));
+		}
 	}
 }
 
@@ -219,6 +239,16 @@ void GlobalVariables::AddItem(const std::string& groupName, const std::string& k
 
 void GlobalVariables::AddItem(const std::string& groupName, const std::string& key, Vector3& value)
 {
+	// グループの参照取得
+	Group& group = datas_[groupName];
+	// 項目が未登録なら
+	if (group.items.find(key) == group.items.end()) {
+		SetValue(groupName, key, value);
+	}
+}
+
+void GlobalVariables::AddItem(const std::string& groupName, const std::string& key, bool value) {
+
 	// グループの参照取得
 	Group& group = datas_[groupName];
 	// 項目が未登録なら
@@ -255,6 +285,16 @@ Vector3 GlobalVariables::GetVector3Value(const std::string& groupName, const std
 	assert(group.items.find(key) != group.items.end());
 
 	return std::get<Vector3>(group.items.at(key).value);
+}
+
+bool GlobalVariables::GetBoolValue(const std::string& groupName, const std::string& key) const {
+	
+	assert(datas_.find(groupName) != datas_.end());
+	const Group& group = datas_.at(groupName);
+
+	assert(group.items.find(key) != group.items.end());
+
+	return std::get<bool>(group.items.at(key).value);
 }
 
 void GlobalVariables::Update() {
@@ -299,6 +339,11 @@ void GlobalVariables::Update() {
 			else if (std::holds_alternative<Vector3>(item.value)) {
 				Vector3* ptr = std::get_if<Vector3>(&item.value);
 				ImGui::SliderFloat3(itemName.c_str(), reinterpret_cast<float*>(ptr), -10.0f, 10.0f);
+			}
+			// bool型の値を保持
+			else if (std::holds_alternative<bool>(item.value)) {
+				bool* ptr = std::get_if<bool>(&item.value);
+				ImGui::Checkbox(itemName.c_str(), ptr);
 			}
 		}
 

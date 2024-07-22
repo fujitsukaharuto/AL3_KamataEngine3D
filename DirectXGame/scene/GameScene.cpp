@@ -26,6 +26,7 @@ void GameScene::Initialize() {
 	lockOn_->Initialize();
 
 	collisionManager_ = std::make_unique<CollisionManager>();
+	collisionManager_->Initialize();
 
 	/*playerTextureHandle_ = TextureManager::Load("human.png");*/
 	modelFighterBody_.reset(Model::CreateFromOBJ("playerbody", true));
@@ -88,6 +89,7 @@ void GameScene::Update()
 	lockOn_->Update(enemies_, viewProject_);
 
 	CheckAllCollisions();
+	collisionManager_->UpdateWorldTransform();
 
 #ifdef _DEBUG
 
@@ -148,7 +150,7 @@ void GameScene::Draw() {
 		enemy->Draw(viewProject_);
 	}
 	player_->Draw(viewProject_);
-
+	collisionManager_->Draw(viewProject_);
 
 
 	// 3Dオブジェクト描画後処理

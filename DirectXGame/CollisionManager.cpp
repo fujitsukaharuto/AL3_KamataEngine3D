@@ -1,5 +1,42 @@
 #include "CollisionManager.h"
 #include "MathCal.h"
+#include "GlobalVariables.h"
+
+void CollisionManager::Initialize() {
+
+	icoModel_.reset(Model::CreateFromOBJ("ICO", true));
+	GlobalVariables* globalvariables = GlobalVariables::GetInstance();
+	const char* groupName = "CollisionModel";
+	GlobalVariables::GetInstance()->CreateGroup(groupName);
+	globalvariables->AddItem(groupName, "ShowCollision", isShowCollision_);
+
+}
+
+void CollisionManager::UpdateWorldTransform() {
+
+	ApplyGlobalVariables();
+
+	if (!isShowCollision_) {
+		return;
+	}
+
+	for (Collider* collider : colliders_) {
+		collider->UpdateWorldTransform();
+	}
+
+}
+
+void CollisionManager::Draw(const ViewProjection& viewProjection) {
+
+	if (!isShowCollision_) {
+		return;
+	}
+
+	for (Collider* collider : colliders_) {
+		collider->Draw(icoModel_.get(), viewProjection);
+	}
+
+}
 
 void CollisionManager::Reset() {
 
@@ -50,4 +87,10 @@ void CollisionManager::AddCollider(Collider* collider) {
 
 	colliders_.push_back(collider);
 
+}
+
+void CollisionManager::ApplyGlobalVariables() {
+	GlobalVariables* globalvariables = GlobalVariables::GetInstance();
+	const char* groupName = "CollisionModel";
+	isShowCollision_ = globalvariables->GetBoolValue(groupName, "ShowCollision");
 }
