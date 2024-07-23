@@ -1,8 +1,15 @@
 #include "Enemy.h"
 #include "ImGuiManager.h"
 #include "MathCal.h"
+#include "CollisionTypeIdDef.h"
 
-Enemy::Enemy() {}
+uint32_t Enemy::nextNerialNumber_ = 0;
+
+Enemy::Enemy() {
+
+	serialNumber_ = nextNerialNumber_;
+	++nextNerialNumber_;
+}
 
 Enemy::~Enemy() {}
 
@@ -21,6 +28,9 @@ void Enemy::Initialize(const std::vector<Model*>& models)
 	worldTransform_.translation_ = {5.0f, 0.0f, 0.0f};
 	worldTransformL_arm_.translation_ = {-0.874f, 0.455f, 0.0f};
 	worldTransformR_arm_.translation_ = {0.874f, 0.455f, 0.0f};
+
+	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kEnemy));
+
 }
 
 void Enemy::Update()
@@ -56,11 +66,11 @@ void Enemy::Draw(const ViewProjection& viewProjection)
 void Enemy::Move()
 {
 	float mpi = 3.14159265f;
-	float kCharacterSpeed = 0.2f;
+	float kCharacterSpeed = 0.05f;
 	Vector3 velocity = {0.0f, 0.0f, -kCharacterSpeed};
 	velocity = TransformNormal(velocity, worldTransform_.matWorld_);
 	worldTransform_.translation_ += velocity;
-	worldTransform_.rotation_.y += 0.05f;
+	worldTransform_.rotation_.y += 0.01f;
 	worldTransform_.rotation_.y = std::fmod(worldTransform_.rotation_.y, 2.0f * mpi);
 }
 
@@ -74,6 +84,8 @@ void Enemy::UpdatePartsGimmick()
 	worldTransformR_arm_.rotation_.x = std::fmod(worldTransformR_arm_.rotation_.x, 2.0f * mpi);
 }
 
+void Enemy::OnCollision([[maybe_unused]] Collider* other) {}
+
  Vector3 Enemy::GetCenterPosition() const {
 
 	const Vector3 offset = {0.0f, 1.0f, 0.0f};
@@ -81,4 +93,6 @@ void Enemy::UpdatePartsGimmick()
 	Vector3 worldPos = Transform(offset, worldTransformBody_.matWorld_);
 
 	return worldPos;
-}
+ }
+
+ uint32_t Enemy::GetSerialNumber() const { return serialNumber_; }

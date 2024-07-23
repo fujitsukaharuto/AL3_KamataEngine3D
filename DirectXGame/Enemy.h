@@ -32,13 +32,18 @@ public:
 
 	void UpdatePartsGimmick();
 
-	 Vector3 GetCenterPosition() const override;
+	void OnCollision([[maybe_unused]] Collider* other) override;
+
+	Vector3 GetCenterPosition() const override;
+
+	uint32_t GetSerialNumber() const; 
 
 private:
 
 	WorldTransform worldTransformBody_;
 	WorldTransform worldTransformL_arm_;
 	WorldTransform worldTransformR_arm_;
-
+	uint32_t serialNumber_ = 0;
+	static uint32_t nextNerialNumber_;
 
 };

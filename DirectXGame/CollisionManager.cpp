@@ -54,9 +54,9 @@ void CollisionManager::CheckCollisionPair(Collider* colliderA, Collider* collide
 
 	if (distance < colliderA->GetRadius()+colliderB->GetRadius()) {
 
-		colliderA->OnCollision();
+		colliderA->OnCollision(colliderB);
 
-		colliderB->OnCollision();
+		colliderB->OnCollision(colliderA);
 
 	}
 

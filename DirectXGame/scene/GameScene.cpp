@@ -57,7 +57,7 @@ void GameScene::Initialize() {
 	player_->SetViewProjection(&followCamera_->GetViewProjection());
 
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 1; i++) {
 		enemies_.push_back(std::make_unique<Enemy>());
 	}
 	for (std::unique_ptr<Enemy>& enemy : enemies_) {
@@ -178,6 +178,10 @@ void GameScene::CheckAllCollisions() {
 	collisionManager_->Reset();
 
 	collisionManager_->AddCollider(player_.get());
+	if (player_->GetIsAttack()) {
+		collisionManager_->AddCollider(player_->GetWeaponCollider());
+	}
+
 	//敵について
 	for (const std::unique_ptr<Enemy>&  enemy : enemies_) {
 		collisionManager_->AddCollider(enemy.get());

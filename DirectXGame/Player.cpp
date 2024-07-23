@@ -4,6 +4,7 @@
 #include "ImGuiManager.h"
 #include "GlobalVariables.h"
 #include "LockOn.h"
+#include "CollisionTypeIdDef.h"
 
 #include <cmath>
 #include <iostream>
@@ -26,28 +27,31 @@ Player::~Player() {}
 void Player::Initialize(const std::vector<Model*>& models) {
 	
 	BaseCharacter::Initialize(models);
+	hammer_ = std::make_unique<Hammer>();
+	hammer_->Initialize(models_[kModelIndexWeapon]);
+	hammer_->UpdateWorldTransform();
 
 	GlobalVariables* globalvariables = GlobalVariables::GetInstance();
 	const char* groupName = "Player";
 	GlobalVariables::GetInstance()->CreateGroup(groupName);
 	globalvariables->AddItem(groupName, "Test", int32_t(26));
 
+	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kPlayer));
+
 	worldTransformBody_.Initialize();
 	worldTransformHead_.Initialize();
 	worldTransformL_arm_.Initialize();
 	worldTransformR_arm_.Initialize();
-	worldTransformWeapon_.Initialize();
 
 	worldTransformBody_.parent_ = &worldTransform_;
 	worldTransformHead_.parent_ = &worldTransformBody_;
 	worldTransformL_arm_.parent_ = &worldTransformBody_;
 	worldTransformR_arm_.parent_ = &worldTransformBody_;
-	worldTransformWeapon_.parent_ = &worldTransformBody_;
+	hammer_->SetParent(worldTransformBody_);
 
 	/*worldTransformHead_.translation_ = {0.0f, 1.65f, 0.0f};
 	worldTransformL_arm_.translation_ = {-0.59f, 1.65f, 0.0f};
 	worldTransformR_arm_.translation_ = {0.59f, 1.65f, 0.0f};*/
-	worldTransformWeapon_.translation_ = {0.0f, 0.9f, -0.3f};
 
 	globalvariables->AddItem(groupName, "Head Translation", worldTransformHead_.translation_);
 	globalvariables->AddItem(groupName, "ArmL Translation", worldTransformL_arm_.translation_);
@@ -63,7 +67,7 @@ void Player::Initialize(const std::vector<Model*>& models) {
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
-	worldTransformWeapon_.UpdateMatrix();
+	hammer_->UpdateWorldTransform();
 }
 
 void Player::Update()
@@ -108,9 +112,11 @@ void Player::Update()
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 		if (behaviorTimer_ <= 0) {
-			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
-				behaviorRequest_ = Behavior::kAttack;
-				behaviorTimer_ = 60.0f;
+			if (behavior_!=Behavior::kJump) {
+				if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
+					behaviorRequest_ = Behavior::kAttack;
+					behaviorTimer_ = 60.0f;
+				}
 			}
 		}
 		if (behaviorTimer_==0) {
@@ -130,7 +136,7 @@ void Player::Draw(const ViewProjection& viewProjection)
 	models_[kModelIndexL_arm]->Draw(worldTransformL_arm_, viewProjection);
 	models_[kModelIndexR_arm]->Draw(worldTransformR_arm_, viewProjection);
 	if (behavior_ == Behavior::kAttack) {
-		models_[kModelIndexWeapon]->Draw(worldTransformWeapon_, viewProjection);
+		hammer_->Draw(viewProjection);
 	}
 }
 
@@ -145,6 +151,7 @@ void Player::BehaviorRootUpdate()
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
+	hammer_->UpdateWorldTransform();
 
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
@@ -215,14 +222,15 @@ void Player::BehaviorAttackUpdate()
 	worldTransformR_arm_.rotation_.y = LerpShortAngle(worldTransformR_arm_.rotation_.y, -0.533f, 0.15f);
 	worldTransformR_arm_.rotation_.z = LerpShortAngle(worldTransformR_arm_.rotation_.z, 0.0f, 0.15f);
 
-	worldTransformWeapon_.rotation_.x = LerpShortAngle(worldTransformWeapon_.rotation_.x, 1.5f, 0.15f);
+	hammer_->SetRotaion(Vector3(
+		LerpShortAngle(hammer_->GetRotation().x, 1.5f, 0.15f), 0.0f, 0.0f));
 
 	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
-	worldTransformWeapon_.UpdateMatrix();
+	hammer_->UpdateWorldTransform();
 
 }
 
@@ -230,7 +238,7 @@ void Player::BehaviorAttackInitialize()
 {
 	worldTransformL_arm_.rotation_ = {-3.36f, 0.0f, -0.416f};
 	worldTransformR_arm_.rotation_ = {-3.36f, 0.0f, 0.416f};
-	worldTransformWeapon_.rotation_ = {-0.2f, 0.0f, 0.0f};
+	hammer_->SetRotaion({-0.2f, 0.0f, 0.0f});
 	attackSpeed_ = 0.2f;
 	attackMove_ = {0.0f, 0.0f, attackSpeed_};
 }
@@ -250,6 +258,7 @@ void Player::BehaviorDashUpdate()
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
+	hammer_->UpdateWorldTransform();
 
 	const uint32_t behaviorDashTime = 20;
 
@@ -286,6 +295,7 @@ void Player::BehaviorJumpUpdate()
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
+	hammer_->UpdateWorldTransform();
 
 }
 
@@ -400,9 +410,13 @@ void Player::UpdateArmGimmick()
 	worldTransformR_arm_.rotation_.x = std::sin(armParameter_) * armAmplitude_;
 }
 
-void Player::OnCollision() {
+void Player::OnCollision([[maybe_unused]] Collider* other) {
 
-	behaviorRequest_ = Behavior::kJump;
+	uint32_t typeID = other->GetTypeID();
+	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy)) {
+		behaviorTimer_ = -1;
+		behaviorRequest_ = Behavior::kJump;
+	}
 
 }
 
@@ -420,6 +434,16 @@ Vector3 Player::GetCenterPosition() const {
 	Vector3 worldPos = Transform(offset, worldTransform_.matWorld_);
 
 	return worldPos;
+}
+
+Hammer* Player::GetWeaponCollider() { return hammer_.get(); }
+
+bool Player::GetIsAttack() const { 
+	
+	if (behavior_==Behavior::kAttack) {
+		return true;
+	}
+	return false;
 }
 
 void Player::ApplyGlobalVariables() {

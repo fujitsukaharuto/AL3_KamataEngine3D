@@ -4,6 +4,7 @@
 
 #include "ViewProjection.h"
 #include "BaseCharacter.h"
+#include "Hammer.h"
 
 
 class LockOn;
@@ -97,13 +98,17 @@ public:
 	/// </summary>
 	void UpdateArmGimmick();
 
-	void OnCollision() override;
+	void OnCollision([[maybe_unused]] Collider* other) override;
 
 	void SetViewProjection(const ViewProjection* viewProjection) { viewProjection_ = viewProjection; }
 
 	void SetLockOn(const LockOn* target);
 
 	Vector3 GetCenterPosition() const override;
+
+	Hammer* GetWeaponCollider();
+
+	bool GetIsAttack() const;
 
 	//調整項目の適用
 	void ApplyGlobalVariables();
@@ -112,11 +117,12 @@ private:
 
 	const ViewProjection* viewProjection_ = nullptr;
 
+	std::unique_ptr<Hammer> hammer_ = nullptr;
+
 	WorldTransform worldTransformBody_;
 	WorldTransform worldTransformHead_;
 	WorldTransform worldTransformL_arm_;
 	WorldTransform worldTransformR_arm_;
-	WorldTransform worldTransformWeapon_;
 
 	Behavior behavior_ = Behavior::kRoot;
 	std::optional<Behavior> behaviorRequest_ = std::nullopt;

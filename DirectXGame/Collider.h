@@ -10,11 +10,11 @@ public:
 	Collider() = default;
 	virtual ~Collider() = default;
 
-	virtual void OnCollision(){}
+	virtual void OnCollision([[maybe_unused]]Collider* other) {}
 
 	virtual Vector3 GetCenterPosition() const = 0;
 
-	void Initialize();
+	virtual void Initialize();
 
 	void UpdateWorldTransform();
 
@@ -24,9 +24,16 @@ public:
 
 	void SetRadius();
 
+	uint32_t GetTypeID() const;
+
+	void SetTypeID(uint32_t typeID);
+
 private:
 
 	float radius_ = 1.5f;
 	WorldTransform worldTransform;
+
+	// 種別ID
+	uint32_t typeID_ = 0u;
 
 };

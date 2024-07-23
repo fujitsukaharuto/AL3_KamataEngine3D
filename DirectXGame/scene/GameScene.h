@@ -80,6 +80,7 @@ private: // メンバ変数
 	std::unique_ptr<Model> modelFighterR_arm_;
 	std::unique_ptr<Player> player_;
 
+
 	std::unique_ptr<Model> modelPlayerWeapon_;
 
 	std::unique_ptr<Model> enemyModelfightBody_;
