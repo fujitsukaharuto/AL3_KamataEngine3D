@@ -26,6 +26,8 @@ public:
 
 	void SetRotaion(const Vector3& rotation);
 
+	void DeletionContactHistory();
+
 private:
 
 	Model* model_ = nullptr;

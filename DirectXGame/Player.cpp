@@ -239,6 +239,7 @@ void Player::BehaviorAttackInitialize()
 	worldTransformL_arm_.rotation_ = {-3.36f, 0.0f, -0.416f};
 	worldTransformR_arm_.rotation_ = {-3.36f, 0.0f, 0.416f};
 	hammer_->SetRotaion({-0.2f, 0.0f, 0.0f});
+	hammer_->DeletionContactHistory();
 	attackSpeed_ = 0.2f;
 	attackMove_ = {0.0f, 0.0f, attackSpeed_};
 }

@@ -92,3 +92,9 @@ void Hammer::SetParent(const WorldTransform& worldTrans) {
 const Vector3& Hammer::GetRotation() const { return worldTransform_.rotation_; }
 
 void Hammer::SetRotaion(const Vector3& rotation) { worldTransform_.rotation_ = rotation; }
+
+void Hammer::DeletionContactHistory() {
+
+	collisionRecord_.Clear();
+
+}
