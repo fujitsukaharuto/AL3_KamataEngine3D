@@ -19,6 +19,14 @@ enum PlayerModelIndex {
 	kModelIndexWeapon = 4,
 };
 
+const std::array<Player::ConstAttack, Player::ComboNum> Player::kConstAttacks_ = {
+	{
+     // 振りかぶり、攻撃前硬直、攻撃振り時間、硬直
+		{0, 0, 40, 0, 0.0f, 0.0f, 0.15f},
+		{15, 5, 35, 0, 0.2f, 0.0f, 0.0f},
+		{0, 10, 35, 30, 0.2f, 0.0f, 0.0f},
+	}
+};
 
 Player::Player() {}
 
@@ -111,16 +119,13 @@ void Player::Update()
 
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
-		if (behaviorTimer_ <= 0) {
+		if (workAttack_.comboIndex == 0 && workAttack_.attackParameter_ == 0) {
 			if (behavior_!=Behavior::kJump) {
 				if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
 					behaviorRequest_ = Behavior::kAttack;
 					behaviorTimer_ = 60.0f;
 				}
 			}
-		}
-		if (behaviorTimer_==0) {
-			behaviorRequest_ = Behavior::kRoot;
 		}
 	}
 	if (behaviorTimer_>=0) {
@@ -206,24 +211,124 @@ void Player::BehaviorAttackUpdate()
 		}
 	}
 
-	if (behaviorTimer_>45) {
-		attackMove_ = {0.0f, 0.0f, attackSpeed_};
-		Matrix4x4 rotateBody = MakeRotateXYZMatrix(worldTransform_.rotation_);
-		attackMove_ = TransformNormal(attackMove_, rotateBody);
+	uint32_t totalTime = 0;
+	uint32_t onePhaseTime = kConstAttacks_[workAttack_.comboIndex].anticipationTime;
+	uint32_t twoPhaseTime = kConstAttacks_[workAttack_.comboIndex].chargeTime;
+	uint32_t threePhaseTime = kConstAttacks_[workAttack_.comboIndex].swingTime;
+	switch (workAttack_.comboIndex) {
+	case 0:
+		if (behaviorTimer_ > 45) {
+			attackMove_ = {0.0f, 0.0f, attackSpeed_};
+			Matrix4x4 rotateBody = MakeRotateXYZMatrix(worldTransform_.rotation_);
+			attackMove_ = TransformNormal(attackMove_, rotateBody);
 
-		worldTransform_.translation_ += attackMove_;
+			worldTransform_.translation_ += attackMove_;
+		}
+
+		switch (workAttack_.inComboPhase) {
+		case 0:
+			break;
+		case 1:
+			break;
+		case 2:
+			worldTransformBody_.rotation_.y = LerpShortAngle(worldTransformBody_.rotation_.y, 0.0f, 0.3f);
+			break;
+		case 3:
+		default:
+			break;
+		}
+
+		break;
+	case 1:
+		if (behaviorTimer_ > 45) {
+			attackMove_ = {0.0f, 0.0f, attackSpeed_};
+			Matrix4x4 rotateBody = MakeRotateXYZMatrix(worldTransform_.rotation_);
+			attackMove_ = TransformNormal(attackMove_, rotateBody);
+
+			worldTransform_.translation_ += attackMove_;
+		}
+
+		if ((workAttack_.attackParameter_ <= onePhaseTime)) {
+			worldTransformR_arm_.rotation_.x = LerpShortAngle(worldTransformR_arm_.rotation_.x, -3.36f, 0.3f);
+			worldTransformR_arm_.rotation_.y = LerpShortAngle(worldTransformR_arm_.rotation_.y, 0.0f, 0.3f);
+			worldTransformR_arm_.rotation_.z = LerpShortAngle(worldTransformR_arm_.rotation_.z, 0.416f, 0.3f);
+
+			worldTransformL_arm_.rotation_.x = LerpShortAngle(worldTransformL_arm_.rotation_.x, -3.36f, 0.3f);
+			worldTransformL_arm_.rotation_.y = LerpShortAngle(worldTransformL_arm_.rotation_.y, 0.0f, 0.3f);
+			worldTransformL_arm_.rotation_.z = LerpShortAngle(worldTransformL_arm_.rotation_.z, -0.416f, 0.3f);
+
+			hammer_->SetRotaion({LerpShortAngle(hammer_->GetRotation().x, -0.2f, 0.3f), 0.0f, 0.0f});
+			if (workAttack_.attackParameter_ == onePhaseTime) {
+				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].chargeTime;
+			}
+		}
+		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime)) &&
+			(workAttack_.attackParameter_ > onePhaseTime)) {
+
+			if (workAttack_.attackParameter_ == (onePhaseTime + twoPhaseTime)) {
+				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].swingTime;
+			}
+		}
+		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime + threePhaseTime)) &&
+			(workAttack_.attackParameter_ > (onePhaseTime + twoPhaseTime))) {
+
+			worldTransformR_arm_.rotation_.x = LerpShortAngle(worldTransformR_arm_.rotation_.x, -1.36f, 0.3f);
+			worldTransformR_arm_.rotation_.y = LerpShortAngle(worldTransformR_arm_.rotation_.y, -0.533f, 0.3f);
+			worldTransformR_arm_.rotation_.z = LerpShortAngle(worldTransformR_arm_.rotation_.z, 0.0f, 0.3f);
+
+			worldTransformL_arm_.rotation_.x = LerpShortAngle(worldTransformL_arm_.rotation_.x, -1.36f, 0.3f);
+			worldTransformL_arm_.rotation_.y = LerpShortAngle(worldTransformL_arm_.rotation_.y, 0.533f, 0.3f);
+			worldTransformL_arm_.rotation_.z = LerpShortAngle(worldTransformL_arm_.rotation_.z, 0.0f, 0.3f);
+
+			hammer_->SetRotaion({LerpShortAngle(hammer_->GetRotation().x, 1.5f, 0.3f), 0.0f, 0.0f});
+			if (workAttack_.attackParameter_ == (onePhaseTime + twoPhaseTime + threePhaseTime)) {
+				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].recoveryTime;
+			}
+		}
+		break;
+	case 2:
+	default:
+		if (behaviorTimer_ > 45) {
+			attackMove_ = {0.0f, 0.0f, attackSpeed_};
+			Matrix4x4 rotateBody = MakeRotateXYZMatrix(worldTransform_.rotation_);
+			attackMove_ = TransformNormal(attackMove_, rotateBody);
+
+			worldTransform_.translation_ += attackMove_;
+		}
+
+		if ((workAttack_.attackParameter_ <= onePhaseTime)) {
+
+
+
+			if (workAttack_.attackParameter_ == onePhaseTime) {
+				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].chargeTime;
+			}
+		}
+		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime)) &&
+			(workAttack_.attackParameter_ > onePhaseTime)) {
+
+			if (workAttack_.attackParameter_ == (onePhaseTime + twoPhaseTime)) {
+				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].swingTime;
+			}
+		}
+		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime + threePhaseTime)) &&
+			(workAttack_.attackParameter_ > (onePhaseTime + twoPhaseTime))) {
+
+			if (worldTransformBody_.rotation_.y < 6.26573f) {
+				worldTransformBody_.rotation_.y += 0.3f; 
+			}
+			if (worldTransformBody_.rotation_.y > 6.26573f) {
+				worldTransformBody_.rotation_.y = 6.26573f;
+			}
+			
+
+			if (workAttack_.attackParameter_ == (onePhaseTime + twoPhaseTime + threePhaseTime)) {
+				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].recoveryTime;
+			}
+		}
+		break;
 	}
 
-	worldTransformL_arm_.rotation_.x = LerpShortAngle(worldTransformL_arm_.rotation_.x, -1.36f, 0.15f);
-	worldTransformL_arm_.rotation_.y = LerpShortAngle(worldTransformL_arm_.rotation_.y, 0.533f, 0.15f);
-	worldTransformL_arm_.rotation_.z = LerpShortAngle(worldTransformL_arm_.rotation_.z, 0.0f, 0.15f);
-
-	worldTransformR_arm_.rotation_.x = LerpShortAngle(worldTransformR_arm_.rotation_.x, -1.36f, 0.15f);
-	worldTransformR_arm_.rotation_.y = LerpShortAngle(worldTransformR_arm_.rotation_.y, -0.533f, 0.15f);
-	worldTransformR_arm_.rotation_.z = LerpShortAngle(worldTransformR_arm_.rotation_.z, 0.0f, 0.15f);
-
-	hammer_->SetRotaion(Vector3(
-		LerpShortAngle(hammer_->GetRotation().x, 1.5f, 0.15f), 0.0f, 0.0f));
 
 	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
@@ -232,14 +337,92 @@ void Player::BehaviorAttackUpdate()
 	worldTransformR_arm_.UpdateMatrix();
 	hammer_->UpdateWorldTransform();
 
+	XINPUT_STATE joyStatePre;
+	XINPUT_STATE joyState;
+	if (workAttack_.comboIndex < (ComboNum - 1) ) {
+
+		if (Input::GetInstance()->GetJoystickState(0, joyState) && Input::GetInstance()->GetJoystickStatePrevious(0, joyStatePre)) {
+
+			if ((joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) && !(joyStatePre.Gamepad.wButtons & XINPUT_GAMEPAD_A)) {
+				workAttack_.comboNext = true;
+			}
+		}
+	}
+
+	totalTime = kConstAttacks_[workAttack_.comboIndex].anticipationTime +
+		kConstAttacks_[workAttack_.comboIndex].chargeTime +
+		kConstAttacks_[workAttack_.comboIndex].swingTime +
+		kConstAttacks_[workAttack_.comboIndex].recoveryTime;
+	if (++workAttack_.attackParameter_ >= totalTime) {
+		if (workAttack_.comboNext) {
+			workAttack_.comboNext = false;
+
+			workAttack_.attackParameter_ = 0;
+			workAttack_.inComboPhase = 0;
+
+			if (Input::GetInstance()->GetJoystickState(0, joyState)) {
+				const float threshold = 0.7f;
+				bool ismoving = false;
+
+				velocity_ = {(float)joyState.Gamepad.sThumbLX / SHRT_MAX, 0, (float)joyState.Gamepad.sThumbLY / SHRT_MAX};
+				if (velocity_.Lenght() > threshold) {
+					ismoving = true;
+				}
+
+				float targetRotate = 0;
+				if (ismoving) {
+					const float kCharacterSpeed = 0.3f;
+					velocity_ = velocity_.Normalize() * kCharacterSpeed;
+					Matrix4x4 rotateCamera = MakeRotateXYZMatrix(viewProjection_->rotation_);
+					velocity_ = TransformNormal(velocity_, rotateCamera);
+
+					targetRotate = std::atan2(velocity_.x, velocity_.z);
+					destinationAngleY_ = targetRotate;
+					worldTransform_.rotation_.y = destinationAngleY_;
+				}
+			}
+			
+
+			switch (workAttack_.comboIndex) {
+			case 0:
+				/*worldTransformL_arm_.rotation_ = {-3.36f, 0.0f, -0.416f};
+				worldTransformR_arm_.rotation_ = {-3.36f, 0.0f, 0.416f};*/
+				hammer_->SetRotaion({hammer_->GetRotation().x, 0.0f, 1.5708f});
+				hammer_->DeletionContactHistory();
+				attackSpeed_ = 0.2f;
+				attackMove_ = {0.0f, 0.0f, attackSpeed_};
+				workAttack_.comboIndex++;
+				break;
+			case 1:
+			default:
+				worldTransformBody_.rotation_.y = 0.0f;
+				hammer_->DeletionContactHistory();
+				attackSpeed_ = 0.2f;
+				attackMove_ = {0.0f, 0.0f, attackSpeed_};
+				workAttack_.comboIndex++;
+				break;
+			}
+
+		} else {
+			behaviorRequest_ = Behavior::kRoot;
+			workAttack_.attackParameter_ = 0;
+			workAttack_.comboIndex = 0;
+			workAttack_.inComboPhase = 0;
+			worldTransformBody_.rotation_.y = 0.0f;
+		}
+	}
+
 }
 
 void Player::BehaviorAttackInitialize()
 {
-	worldTransformL_arm_.rotation_ = {-3.36f, 0.0f, -0.416f};
-	worldTransformR_arm_.rotation_ = {-3.36f, 0.0f, 0.416f};
-	hammer_->SetRotaion({-0.2f, 0.0f, 0.0f});
+
+	worldTransformBody_.rotation_.y = 1.5708f;
+	worldTransformL_arm_.rotation_ = {-1.36f, 0.533f, 0.0f};
+	worldTransformR_arm_.rotation_ = {-1.36f, -0.533f, 0.0f};
+	hammer_->SetRotaion({1.5f, 0.0f, 1.5708f});
 	hammer_->DeletionContactHistory();
+	workAttack_.inComboPhase = 2;
 	attackSpeed_ = 0.2f;
 	attackMove_ = {0.0f, 0.0f, attackSpeed_};
 }
@@ -417,6 +600,10 @@ void Player::OnCollision([[maybe_unused]] Collider* other) {
 	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy)) {
 		behaviorTimer_ = -1;
 		behaviorRequest_ = Behavior::kJump;
+		workAttack_.attackParameter_ = 0;
+		workAttack_.comboIndex = 0;
+		workAttack_.inComboPhase = 0;
+		worldTransformBody_.rotation_.y = 0.0f;
 	}
 
 }

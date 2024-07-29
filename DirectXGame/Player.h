@@ -22,6 +22,33 @@ public:
 		kJump,
 	};
 
+	struct ConstAttack {
+		// 振りかぶりの時間
+		uint32_t anticipationTime;
+		// ための時間
+		uint32_t chargeTime;
+		// 攻撃振りの時間
+		uint32_t swingTime;
+		// 硬直時間
+		uint32_t recoveryTime;
+		// 振りかぶりの移動速さ
+		float anticipationSpeed;
+		// ための移動速さ
+		float chargeSpeed;
+		// 攻撃振りの移動速さ
+		float swingSpeed;
+	};
+
+	static const int ComboNum = 3;
+	static const std::array<ConstAttack, ComboNum> kConstAttacks_;
+
+	struct WorkAttack {
+		// 攻撃ギミックの媒介変数
+		uint32_t attackParameter_ = 0;
+		int32_t comboIndex = 0;
+		int32_t inComboPhase = 0;
+		bool comboNext = false;
+	};
 
 	struct WorkDash 
 	{
@@ -129,6 +156,8 @@ private:
 	float behaviorTimer_;
 	Vector3 attackMove_;
 	float attackSpeed_ = 0.2f;
+
+	WorkAttack workAttack_;
 
 	Vector3 velocity_ = {};
 
