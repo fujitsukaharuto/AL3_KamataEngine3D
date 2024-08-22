@@ -22,7 +22,7 @@ public:
 
 	float GetRadius();
 
-	void SetRadius();
+	void SetRadius(const float rad);
 
 	uint32_t GetTypeID() const;
 

@@ -17,6 +17,7 @@ enum PlayerModelIndex {
 	kModelIndexL_arm = 2,
 	kModelIndexR_arm = 3,
 	kModelIndexWeapon = 4,
+	kModelIndexBullet =5,
 };
 
 const std::array<Player::ConstAttack, Player::ComboNum> Player::kConstAttacks_ = {
@@ -30,7 +31,13 @@ const std::array<Player::ConstAttack, Player::ComboNum> Player::kConstAttacks_ =
 
 Player::Player() {}
 
-Player::~Player() {}
+Player::~Player() {
+
+	for (SnowBall* ball : snowBalls_) {
+		delete ball;
+	}
+
+}
 
 void Player::Initialize(const std::vector<Model*>& models) {
 	
@@ -80,6 +87,14 @@ void Player::Initialize(const std::vector<Model*>& models) {
 
 void Player::Update()
 {
+	snowBalls_.remove_if([](SnowBall* ball) {
+		if (ball->IsDead()) {
+			delete ball;
+			return true;
+		}
+		return false;
+	});
+
 	ApplyGlobalVariables();
 
 	if (behaviorRequest_) {
@@ -90,7 +105,7 @@ void Player::Update()
 			BehaviorRootInitialize();
 			break;
 		case Behavior::kAttack:
-			BehaviorAttackInitialize();
+			BehaviorChargeInitialize();
 			break;
 		case Behavior::kDash:
 			BehaviorDashInitialize();
@@ -107,7 +122,7 @@ void Player::Update()
 		BehaviorRootUpdate();
 		break;
 	case Behavior::kAttack:
-		BehaviorAttackUpdate();
+		BehaviorChargeUpdate();
 		break;
 	case Behavior::kDash:
 		BehaviorDashUpdate();
@@ -120,7 +135,7 @@ void Player::Update()
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 		if (workAttack_.comboIndex == 0 && workAttack_.attackParameter_ == 0) {
-			if (behavior_!=Behavior::kJump) {
+			if (behavior_ != Behavior::kJump && behavior_ != Behavior::kAttack) {
 				if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
 					behaviorRequest_ = Behavior::kAttack;
 					behaviorTimer_ = 60.0f;
@@ -132,6 +147,10 @@ void Player::Update()
 		behaviorTimer_--;
 	}
 
+	for (SnowBall* ball : snowBalls_) {
+		ball->Update();
+	}
+
 }
 
 void Player::Draw(const ViewProjection& viewProjection)
@@ -140,8 +159,8 @@ void Player::Draw(const ViewProjection& viewProjection)
 	models_[kModelIndexHead]->Draw(worldTransformHead_, viewProjection);
 	models_[kModelIndexL_arm]->Draw(worldTransformL_arm_, viewProjection);
 	models_[kModelIndexR_arm]->Draw(worldTransformR_arm_, viewProjection);
-	if (behavior_ == Behavior::kAttack) {
-		hammer_->Draw(viewProjection);
+	for (SnowBall* ball : snowBalls_) {
+		ball->Draw(viewProjection);
 	}
 }
 
@@ -498,6 +517,126 @@ void Player::BehaviorJumpInitialize()
 
 }
 
+void Player::BehaviorChargeUpdate() {
+
+	snowBalls_.remove_if([](SnowBall* ball) {
+		if (ball->IsDead()) {
+			delete ball;
+			return true;
+		}
+		return false;
+	});
+
+	if (snowBalls_.size() == 0) {
+		behaviorRequest_ = Behavior::kRoot;
+		return;
+	}
+	if (snowBalls_.back()->IsRemove()) {
+		behaviorRequest_ = Behavior::kRoot;
+		return;
+	}
+
+	//22日すること
+	//玉の回転                  　　ok
+	//小さい敵を飲み込めるように   　　ok
+	//小さい敵を飲み込んで弾が大きく
+	//小さい敵が玉にくっつく
+	//小さい敵が動く
+	//敵の体力、玉の攻撃力
+
+	XINPUT_STATE joyStatePre;
+	XINPUT_STATE joyState;
+	if (Input::GetInstance()->GetJoystickState(0, joyState) && Input::GetInstance()->GetJoystickStatePrevious(0, joyStatePre)) {
+
+		if (!(joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) && (joyStatePre.Gamepad.wButtons & XINPUT_GAMEPAD_A)) {
+			behaviorRequest_ = Behavior::kRoot;
+			snowBalls_.back()->SetRemove(true);
+			const float kBallSpeed = 0.5f;
+			Vector3 vel = {0.0f, 0.0f, 1.0f};
+			vel = vel.Normalize() * kBallSpeed;
+			Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+			vel = TransformNormal(vel, rotatePlayer);
+			snowBalls_.back()->SetVelocity(vel);
+			snowBalls_.back()->SetRadius(snowBalls_.back()->GetRadius());
+		}
+	}
+
+	Move();
+	if (addSnowSize_) {
+		float newRad = snowBalls_.back()->GetRadius();
+		newRad += 0.01f;
+		snowBalls_.back()->SetSizeRadius(newRad);
+	}
+
+	Vector3 oldpos = snowBalls_.back()->GetTrans();
+	const float kCharacterDistance = 1.0f;
+	Vector3 snowBallPos = {0.0f, 0.0f, 1.0f};
+	snowBallPos = snowBallPos.Normalize() * kCharacterDistance;
+
+	snowBallPos.z += snowBalls_.back()->GetRadius();
+	Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+	snowBallPos = TransformNormal(snowBallPos, rotatePlayer);
+
+	snowBallPos += worldTransform_.translation_;
+	snowBallPos.y += snowBalls_.back()->GetRadius();
+	snowBalls_.back()->SetTransform(snowBallPos);
+
+
+	Vector3 Differential = snowBallPos - oldpos;
+	Differential = Differential.Normalize();
+
+	Vector3 forward = {0.0f, 1.0f, 0.0f};
+	Vector3 rotateAxis = forward.Cross(Differential);
+	if (rotateAxis.Lenght() > 0.0f) {
+
+		rotateAxis = rotateAxis.Normalize();
+		float rotateAngle = (Differential.Lenght() / snowBalls_.back()->GetRadius());
+
+
+		Matrix4x4 rotateMat = MakeRotateAxisMatrix(rotateAxis, rotateAngle);
+
+		Matrix4x4 currentTransform = snowBalls_.back()->GetWorldMat();
+
+		currentTransform = Multiply(rotateMat, currentTransform);
+
+		Vector3 newRotate = ExtractEulerAngles(currentTransform);
+
+		snowBalls_.back()->SetRotate(newRotate);
+	}
+
+
+
+	BaseCharacter::Update();
+	worldTransformBody_.UpdateMatrix();
+	worldTransformHead_.UpdateMatrix();
+	worldTransformL_arm_.UpdateMatrix();
+	worldTransformR_arm_.UpdateMatrix();
+}
+
+void Player::BehaviorChargeInitialize() {
+
+	worldTransformL_arm_.rotation_ = {-1.36f, 0.533f, 0.0f};
+	worldTransformR_arm_.rotation_ = {-1.36f, -0.533f, 0.0f};
+	worldTransformL_arm_.UpdateMatrix();
+	worldTransformR_arm_.UpdateMatrix();
+
+
+	SnowBall* newSnowBall = new SnowBall();
+
+	const float kCharacterDistance = 1.0f;
+	Vector3 snowBallPos = {0.0f, 0.0f, 1.0f};
+	snowBallPos.z += newSnowBall->GetRadius();
+	snowBallPos = snowBallPos.Normalize() * kCharacterDistance;
+	Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+	snowBallPos = TransformNormal(snowBallPos, rotatePlayer);
+	snowBallPos += worldTransform_.translation_;
+	snowBallPos.y += newSnowBall->GetRadius();
+
+	newSnowBall->Initialize(models_[kModelIndexBullet], snowBallPos);
+	newSnowBall->SetLittleModel(littleModel_);
+	snowBalls_.push_back(newSnowBall);
+}
+
 void Player::Move() {
 
 	XINPUT_STATE joyState;
@@ -505,10 +644,12 @@ void Player::Move() {
 
 		const float threshold = 0.7f;
 		bool ismoving = false;
+		addSnowSize_ = false;
 
 		velocity_ = {(float)joyState.Gamepad.sThumbLX / SHRT_MAX, 0, (float)joyState.Gamepad.sThumbLY / SHRT_MAX};
 		if (velocity_.Lenght() > threshold) {
 			ismoving = true;
+			addSnowSize_ = true;
 		}
 
 		float targetRotate = 0;
@@ -604,8 +745,17 @@ void Player::OnCollision([[maybe_unused]] Collider* other) {
 		workAttack_.comboIndex = 0;
 		workAttack_.inComboPhase = 0;
 		worldTransformBody_.rotation_.y = 0.0f;
-	}
 
+		if (behavior_ == Behavior::kAttack) {
+			snowBalls_.back()->SetRemove(true);
+			const float kBallSpeed = 2.0f;
+			Vector3 vel = {0.0f, 0.0f, 1.0f};
+			vel = vel.Normalize() * kBallSpeed;
+			Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+			vel = TransformNormal(vel, rotatePlayer);
+			snowBalls_.back()->SetVelocity(vel);
+		}
+	}
 }
 
 void Player::SetLockOn(const LockOn* target)
@@ -626,6 +776,8 @@ Vector3 Player::GetCenterPosition() const {
 
 Hammer* Player::GetWeaponCollider() { return hammer_.get(); }
 
+std::list<SnowBall*> Player::GetBallCollider() { return snowBalls_; }
+
 bool Player::GetIsAttack() const { 
 	
 	if (behavior_==Behavior::kAttack) {
@@ -642,5 +794,11 @@ void Player::ApplyGlobalVariables() {
 	worldTransformR_arm_.translation_ = globalVariables->GetVector3Value(groupName, "ArmR Translation");
 	cycle_ = uint16_t(globalVariables->GetIntValue(groupName, "floatingCycle"));
 	floatingAmplitude_ = globalVariables->GetFloatValue(groupName, "floatingAmplitude");
+
+}
+
+void Player::SetLittleEnemy(std::vector<Model*> model) {
+
+	littleModel_ = model;
 
 }

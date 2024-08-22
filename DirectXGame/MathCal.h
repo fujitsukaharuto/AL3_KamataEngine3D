@@ -55,6 +55,9 @@ Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
 
 Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
 
+Matrix4x4 MakeRotateAxisMatrix(const Vector3& axis, float angle);
+
+Vector3 ExtractEulerAngles(const Matrix4x4& mat);
 
 //コリジョン
 

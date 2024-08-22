@@ -1,14 +1,14 @@
 #pragma once
-#include <vector>
-
 #include "BaseCharacter.h"
-#include "ViewProjection.h"
-#include "LittleEnemy.h"
+#include "WorldTransform.h"
+#include "Model.h"
 
-class Enemy : public BaseCharacter {
+class SnowBall;
+
+class LittleEnemy : public BaseCharacter{
 public:
-	Enemy();
-	~Enemy();
+	LittleEnemy();
+	~LittleEnemy();
 
 	/// <summary>
 	/// 初期化
@@ -36,20 +36,26 @@ public:
 
 	Vector3 GetCenterPosition() const override;
 
-	uint32_t GetSerialNumber() const; 
+	Vector3 GetOrigineScale();
 
-	void SettingLittles();
+	void Setparent(const WorldTransform& pare);
 
-	std::list<LittleEnemy*> GetLittleEnemyCollider();
+	void SetRotate(const Vector3& rotate);
+
+	void SetSclae(const Vector3& scale);
+
+	void SetPosition(const Vector3& pos);
+
+	bool IsDead() const { return isDead_; }
 
 private:
 
 	WorldTransform worldTransformBody_;
 	WorldTransform worldTransformL_arm_;
 	WorldTransform worldTransformR_arm_;
-	uint32_t serialNumber_ = 0;
-	static uint32_t nextNerialNumber_;
 
-	std::list<LittleEnemy*> littleEnemys_;
+	SnowBall* snowball_;
+	bool isGetCaughtUp_ = false;
+	bool isDead_ = false;
 
 };

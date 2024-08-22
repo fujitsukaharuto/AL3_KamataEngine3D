@@ -376,6 +376,58 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 	return result;
 }
 
+Matrix4x4 MakeRotateAxisMatrix(const Vector3& axis, float angle) {
+
+	 // 回転軸を正規化
+	Vector3 normalizedAxis = axis.Normalize();
+
+	// 回転角度をラジアンに変換
+	float cosAngle = cos(angle);
+	float sinAngle = sin(angle);
+
+	// 回転行列を構成
+	Matrix4x4 rotationMatrix;
+	rotationMatrix.m[0][0] = cosAngle + normalizedAxis.x * normalizedAxis.x * (1 - cosAngle);
+	rotationMatrix.m[0][1] = normalizedAxis.x * normalizedAxis.y * (1 - cosAngle) - normalizedAxis.z * sinAngle;
+	rotationMatrix.m[0][2] = normalizedAxis.x * normalizedAxis.z * (1 - cosAngle) + normalizedAxis.y * sinAngle;
+	rotationMatrix.m[0][3] = 0.0f;
+
+	rotationMatrix.m[1][0] = normalizedAxis.y * normalizedAxis.x * (1 - cosAngle) + normalizedAxis.z * sinAngle;
+	rotationMatrix.m[1][1] = cosAngle + normalizedAxis.y * normalizedAxis.y * (1 - cosAngle);
+	rotationMatrix.m[1][2] = normalizedAxis.y * normalizedAxis.z * (1 - cosAngle) - normalizedAxis.x * sinAngle;
+	rotationMatrix.m[1][3] = 0.0f;
+
+	rotationMatrix.m[2][0] = normalizedAxis.z * normalizedAxis.x * (1 - cosAngle) - normalizedAxis.y * sinAngle;
+	rotationMatrix.m[2][1] = normalizedAxis.z * normalizedAxis.y * (1 - cosAngle) + normalizedAxis.x * sinAngle;
+	rotationMatrix.m[2][2] = cosAngle + normalizedAxis.z * normalizedAxis.z * (1 - cosAngle);
+	rotationMatrix.m[2][3] = 0.0f;
+
+	rotationMatrix.m[3][0] = 0.0f;
+	rotationMatrix.m[3][1] = 0.0f;
+	rotationMatrix.m[3][2] = 0.0f;
+	rotationMatrix.m[3][3] = 1.0f;
+
+	return rotationMatrix;
+}
+
+Vector3 ExtractEulerAngles(const Matrix4x4& mat) {
+	Vector3 angles;
+
+	// 3x3回転行列の要素を抽出
+	float m00 = mat.m[0][0];
+	float m10 = mat.m[1][0];
+	float m20 = mat.m[2][0];
+	float m21 = mat.m[2][1];
+	float m22 = mat.m[2][2];
+
+	// 回転角度を計算（例：ロール、ピッチ、ヨー）
+	angles.x = atan2f(m21, m22);                           // ロール
+	angles.y = atan2f(-m20, sqrtf(m21 * m21 + m22 * m22)); // ピッチ
+	angles.z = atan2f(m10, m00);                           // ヨー
+
+	return angles;
+}
+
 bool IsCollision(const Sphere& s1, const Sphere& s2) {
 
 	Vector3 dis = s2.ceneter - s1.ceneter;

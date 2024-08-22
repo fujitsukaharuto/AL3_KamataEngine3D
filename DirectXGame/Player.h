@@ -5,6 +5,7 @@
 #include "ViewProjection.h"
 #include "BaseCharacter.h"
 #include "Hammer.h"
+#include "SnowBall.h"
 
 
 class LockOn;
@@ -99,6 +100,12 @@ public:
 	// ジャンプ行動初期化
 	void BehaviorJumpInitialize();
 
+	//発射前行動更新
+	void BehaviorChargeUpdate();
+	//発射前行動初期化
+	void BehaviorChargeInitialize();
+
+
 
 	/// <summary>
 	/// 移動
@@ -135,10 +142,14 @@ public:
 
 	Hammer* GetWeaponCollider();
 
+	std::list<SnowBall*> GetBallCollider();
+
 	bool GetIsAttack() const;
 
 	//調整項目の適用
 	void ApplyGlobalVariables();
+
+	void SetLittleEnemy(std::vector<Model*> model);
 
 private:
 
@@ -175,5 +186,10 @@ private:
 	float destinationAngleY_ = 0;
 
 	const LockOn* lockOn_ = nullptr;
+
+	std::list<SnowBall*> snowBalls_;
+	bool addSnowSize_ = false;
+
+	std::vector<Model*> littleModel_;
 
 };

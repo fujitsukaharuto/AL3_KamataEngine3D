@@ -59,4 +59,13 @@ struct Vector3 final {
 		const float leng = Lenght();
 		return leng == 0 ? *this : *this / leng;
 	}
+	Vector3 Cross(const Vector3& v) const { return Vector3(
+		this->y * v.z - this->z * v.y,
+		this->z * v.x - this->x * v.z,
+		this->x * v.y - this->y * v.x);
+	}
+	float Dot(const Vector3& v) const {
+		return this->x * v.x + this->y * v.y + this->z * v.z;
+	}
+
 };

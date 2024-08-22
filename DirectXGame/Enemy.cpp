@@ -11,7 +11,12 @@ Enemy::Enemy() {
 	++nextNerialNumber_;
 }
 
-Enemy::~Enemy() {}
+Enemy::~Enemy() {
+
+	for (LittleEnemy* littleEnemy : littleEnemys_) {
+		delete littleEnemy;
+	}
+}
 
 void Enemy::Initialize(const std::vector<Model*>& models)
 {
@@ -31,10 +36,32 @@ void Enemy::Initialize(const std::vector<Model*>& models)
 
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kEnemy));
 
+	float newPos = 2.0f;
+	for (int i = 0; i < 10; i++) {
+		LittleEnemy* newLittleEnemy = new LittleEnemy();
+
+		Vector3 newLittleEPos = {newPos, 0.0f, newPos * 0.5f};
+		newPos += 2.0f;
+
+		newLittleEnemy->Initialize(models_);
+		newLittleEnemy->SetPosition(newLittleEPos);
+
+		littleEnemys_.push_back(newLittleEnemy);
+	}
+
 }
 
 void Enemy::Update()
 {
+
+	littleEnemys_.remove_if([](LittleEnemy* littleE) {
+		if (littleE->IsDead()) {
+			delete littleE;
+			return true;
+		}
+		return false;
+	});
+
 #ifdef _DEBUG
 
 	ImGui::Begin("Enemy");
@@ -46,6 +73,10 @@ void Enemy::Update()
 
 	Move();
 	UpdatePartsGimmick();
+
+	for (LittleEnemy* littleEnemy : littleEnemys_) {
+		littleEnemy->Update();
+	}
 
 	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
@@ -60,6 +91,10 @@ void Enemy::Draw(const ViewProjection& viewProjection)
 	models_[0]->Draw(worldTransformBody_, viewProjection);
 	models_[1]->Draw(worldTransformL_arm_, viewProjection);
 	models_[1]->Draw(worldTransformR_arm_, viewProjection);
+
+	for (LittleEnemy* littleEnemy : littleEnemys_) {
+		littleEnemy->Draw(viewProjection);
+	}
 
 }
 
@@ -86,13 +121,34 @@ void Enemy::UpdatePartsGimmick()
 
 void Enemy::OnCollision([[maybe_unused]] Collider* other) {}
 
- Vector3 Enemy::GetCenterPosition() const {
+Vector3 Enemy::GetCenterPosition() const {
 
 	const Vector3 offset = {0.0f, 1.0f, 0.0f};
 
 	Vector3 worldPos = Transform(offset, worldTransformBody_.matWorld_);
 
 	return worldPos;
- }
+}
 
- uint32_t Enemy::GetSerialNumber() const { return serialNumber_; }
+uint32_t Enemy::GetSerialNumber() const { return serialNumber_; }
+
+void Enemy::SettingLittles() {
+
+	if (littleEnemys_.size() == 0) {
+		float newPos = 2.0f;
+		for (int i = 0; i < 10; i++) {
+			LittleEnemy* newLittleEnemy = new LittleEnemy();
+
+			Vector3 newLittleEPos = {newPos, 0.0f, newPos * 0.5f};
+			newPos += 2.0f;
+
+			newLittleEnemy->Initialize(models_);
+			newLittleEnemy->SetPosition(newLittleEPos);
+
+			littleEnemys_.push_back(newLittleEnemy);
+		}
+	}
+
+}
+
+std::list<LittleEnemy*> Enemy::GetLittleEnemyCollider() { return littleEnemys_; }

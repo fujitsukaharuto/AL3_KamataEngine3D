@@ -34,9 +34,10 @@ void GameScene::Initialize() {
 	modelFighterL_arm_.reset(Model::CreateFromOBJ("playerlefthand", true));
 	modelFighterR_arm_.reset(Model::CreateFromOBJ("playerrighthand", true));
 	modelPlayerWeapon_.reset(Model::CreateFromOBJ("playerweapon", true));
+	modelPlayerBullet_.reset(Model::CreateSphere());
 	std::vector<Model*> playerModels = {modelFighterBody_.get(), modelFighterHead_.get(),
 		modelFighterL_arm_.get(), modelFighterR_arm_.get(),
-		modelPlayerWeapon_.get()};
+		modelPlayerWeapon_.get(), modelPlayerBullet_.get()};
 	
 
 	enemyModelfightBody_.reset(Model::CreateFromOBJ("enemybody", true));
@@ -51,6 +52,7 @@ void GameScene::Initialize() {
 	player_ = std::make_unique<Player>();
 	player_->Initialize(playerModels);
 	player_->SetLockOn(lockOn_.get());
+	player_->SetLittleEnemy(enemyModels);
 
 	followCamera_->SetTarget(&player_->GetWorldTransform());
 	followCamera_->SetLockOn(lockOn_.get());
@@ -84,6 +86,9 @@ void GameScene::Update()
 
 	for (std::unique_ptr<Enemy>& enemy : enemies_) {
 		enemy->Update();
+		if (Input::GetInstance()->TriggerKey(DIK_DELETE)) {
+			enemy->SettingLittles();
+		}
 	}
 
 	lockOn_->Update(enemies_, viewProject_);
@@ -181,10 +186,16 @@ void GameScene::CheckAllCollisions() {
 	if (player_->GetIsAttack()) {
 		collisionManager_->AddCollider(player_->GetWeaponCollider());
 	}
+	for (auto& i : player_->GetBallCollider()) {
+		collisionManager_->AddCollider(i);
+	}
 
 	//敵について
 	for (const std::unique_ptr<Enemy>&  enemy : enemies_) {
 		collisionManager_->AddCollider(enemy.get());
+		for (auto& i : enemy->GetLittleEnemyCollider()) {
+			collisionManager_->AddCollider(i);
+		}
 	}
 
 	collisionManager_->CheckAllCollisions();

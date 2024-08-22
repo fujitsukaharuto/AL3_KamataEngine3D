@@ -119,12 +119,14 @@
     <ClCompile Include="GlobalVariables.cpp" />
     <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Hammer.cpp" />
+    <ClCompile Include="LittleEnemy.cpp" />
     <ClCompile Include="LockOn.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MathCal.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="scene\GameScene.cpp" />
     <ClCompile Include="Skydome.cpp" />
+    <ClCompile Include="SnowBall.cpp" />
     <ClCompile Include="WorldTransformEx.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +165,7 @@
     <ClInclude Include="Ground.h" />
     <ClInclude Include="Hammer.h" />
     <ClInclude Include="input\Input.h" />
+    <ClInclude Include="LittleEnemy.h" />
     <ClInclude Include="LockOn.h" />
     <ClInclude Include="MathCal.h" />
     <ClInclude Include="math\Matrix4x4.h" />
@@ -172,6 +175,7 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="scene\GameScene.h" />
     <ClInclude Include="Skydome.h" />
+    <ClInclude Include="SnowBall.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\TerrainPS.hlsl">
