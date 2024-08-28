@@ -536,13 +536,6 @@ void Player::BehaviorChargeUpdate() {
 		return;
 	}
 
-	//22日すること
-	//玉の回転                  　　ok
-	//小さい敵を飲み込めるように   　　ok
-	//小さい敵を飲み込んで弾が大きく
-	//小さい敵が玉にくっつく
-	//小さい敵が動く
-	//敵の体力、玉の攻撃力
 
 	XINPUT_STATE joyStatePre;
 	XINPUT_STATE joyState;
@@ -740,7 +733,6 @@ void Player::OnCollision([[maybe_unused]] Collider* other) {
 	uint32_t typeID = other->GetTypeID();
 	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy)) {
 		behaviorTimer_ = -1;
-		behaviorRequest_ = Behavior::kJump;
 		workAttack_.attackParameter_ = 0;
 		workAttack_.comboIndex = 0;
 		workAttack_.inComboPhase = 0;
@@ -768,6 +760,15 @@ void Player::SetLockOn(const LockOn* target)
 Vector3 Player::GetCenterPosition() const {
 
 	const Vector3 offset = {0.0f, 1.5f, 0.0f};
+
+	Vector3 worldPos = Transform(offset, worldTransform_.matWorld_);
+
+	return worldPos;
+}
+
+Vector3 Player::GetCenterPosisionOrigine() const {
+
+	const Vector3 offset = {0.0f, 0.0f, 0.0f};
 
 	Vector3 worldPos = Transform(offset, worldTransform_.matWorld_);
 

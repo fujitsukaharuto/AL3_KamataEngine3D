@@ -114,6 +114,7 @@
     <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="CollisionRecord.cpp" />
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="EnemyAttackZone.cpp" />
     <ClCompile Include="EnemyHitEffect.cpp" />
     <ClCompile Include="FollowCamera.cpp" />
     <ClCompile Include="GlobalVariables.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="CollisionRecord.h" />
     <ClInclude Include="CollisionTypeIdDef.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="EnemyAttackZone.h" />
     <ClInclude Include="EnemyHitEffect.h" />
     <ClInclude Include="FollowCamera.h" />
     <ClInclude Include="GlobalVariables.h" />

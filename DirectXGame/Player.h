@@ -140,6 +140,8 @@ public:
 
 	Vector3 GetCenterPosition() const override;
 
+	Vector3 GetCenterPosisionOrigine() const;
+
 	Hammer* GetWeaponCollider();
 
 	std::list<SnowBall*> GetBallCollider();

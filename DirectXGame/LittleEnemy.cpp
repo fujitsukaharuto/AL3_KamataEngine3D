@@ -35,62 +35,62 @@ void LittleEnemy::Initialize(const std::vector<Model*>& models) {
 }
 
 void LittleEnemy::Update() {
+	if (!isGetCaughtUp_) {
+		Move();
+	}
 
 	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
-
 }
 
 void LittleEnemy::Draw(const ViewProjection& viewProjection) {
-
 	models_[0]->Draw(worldTransformBody_, viewProjection);
 	models_[1]->Draw(worldTransformL_arm_, viewProjection);
 	models_[1]->Draw(worldTransformR_arm_, viewProjection);
+}
+
+void LittleEnemy::Move() {
+
+	const float kSpeed = 0.1f;
+
+	Vector3 toTarget = targetPosition_ - GetCenterPosition();
+	Vector3 norToTarget = toTarget.Normalize();
+	Vector3 norVelocity = norToTarget * kSpeed;
+
+	Vector3 velocity;
+	velocity = Sleap(norVelocity, norToTarget, 0.025f) * 1.0f;
+
+	worldTransform_.translation_ += velocity;
+	worldTransform_.rotation_.y = std::atan2(velocity.x, velocity.z);
 
 }
 
 void LittleEnemy::OnCollision(Collider* other) {
-
 	uint32_t typeID = other->GetTypeID();
-	
+
 	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kSnowBall)) {
 		isDead_ = true;
 	}
-
 }
 
 Vector3 LittleEnemy::GetCenterPosition() const {
 	const Vector3 offset = {0.0f, 0.0f, 0.0f};
-
 	Vector3 worldPos = Transform(offset, worldTransform_.matWorld_);
-
 	return worldPos;
 }
 
 Vector3 LittleEnemy::GetOrigineScale() { return {0.5f, 0.5f, 0.5f}; }
 
-void LittleEnemy::Setparent(const WorldTransform& pare) {
+void LittleEnemy::Setparent(const WorldTransform& pare) { worldTransform_.parent_ = &pare; }
 
-	worldTransform_.parent_ = &pare;
+void LittleEnemy::SetRotate(const Vector3& rotate) { worldTransform_.rotation_ = rotate; }
 
-}
+void LittleEnemy::SetSclae(const Vector3& scale) { worldTransform_.scale_ = scale; }
 
-void LittleEnemy::SetRotate(const Vector3& rotate) {
+void LittleEnemy::SetIsGetCaught(const bool is) { isGetCaughtUp_ = is; }
 
-	worldTransform_.rotation_ = rotate;
+void LittleEnemy::SetPosition(const Vector3& pos) { worldTransform_.translation_ = pos; }
 
-}
-
-void LittleEnemy::SetSclae(const Vector3& scale) {
-
-	worldTransform_.scale_ = scale;
-
-}
-
-void LittleEnemy::SetPosition(const Vector3& pos) {
-
-	worldTransform_.translation_ = pos;
-
-}
+void LittleEnemy::SetTargetPosision(const Vector3& target) { targetPosition_ = target; }

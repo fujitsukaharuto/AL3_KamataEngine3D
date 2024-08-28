@@ -16,6 +16,10 @@ Enemy::~Enemy() {
 	for (LittleEnemy* littleEnemy : littleEnemys_) {
 		delete littleEnemy;
 	}
+
+	for (EnemyAttackZone* attackZone : attackZones_) {
+		delete attackZone;
+	}
 }
 
 void Enemy::Initialize(const std::vector<Model*>& models)
@@ -62,6 +66,14 @@ void Enemy::Update()
 		return false;
 	});
 
+	attackZones_.remove_if([](EnemyAttackZone* zone) {
+		if (zone->IsDisappear()) {
+			delete zone;
+			return true;
+		}
+		return false;
+	});
+
 #ifdef _DEBUG
 
 	ImGui::Begin("Enemy");
@@ -74,8 +86,14 @@ void Enemy::Update()
 	Move();
 	UpdatePartsGimmick();
 
+	Attack();
+
 	for (LittleEnemy* littleEnemy : littleEnemys_) {
 		littleEnemy->Update();
+	}
+
+	for (EnemyAttackZone* attackZone : attackZones_) {
+		attackZone->Update();
 	}
 
 	BaseCharacter::Update();
@@ -95,7 +113,9 @@ void Enemy::Draw(const ViewProjection& viewProjection)
 	for (LittleEnemy* littleEnemy : littleEnemys_) {
 		littleEnemy->Draw(viewProjection);
 	}
-
+	for (EnemyAttackZone* attackZone : attackZones_) {
+		attackZone->Draw(viewProjection);
+	}
 }
 
 void Enemy::Move()
@@ -117,6 +137,60 @@ void Enemy::UpdatePartsGimmick()
 	worldTransformR_arm_.rotation_.x += -kPartsRotateSpeed;
 	worldTransformL_arm_.rotation_.x = std::fmod(worldTransformL_arm_.rotation_.x, 2.0f * mpi);
 	worldTransformR_arm_.rotation_.x = std::fmod(worldTransformR_arm_.rotation_.x, 2.0f * mpi);
+}
+
+void Enemy::Attack() {
+
+	if (attackZones_.size() == 0) {
+		attackCooltime_--;
+		if (attackCooltime_ <= 0) {
+			float zoneRotate = 0.0f;
+
+			for (int i = 0; i < 6; i++) {
+				float interval = 6.0f;
+				for (int j = 0; j < 5; j++) {
+
+					EnemyAttackZone* newAttackZone = new EnemyAttackZone();
+					Vector3 newPos = {0.0f, 0.0f, interval};
+					interval += 6.0f;
+					Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
+					newPos = TransformNormal(newPos, rotate);
+					newPos += worldTransform_.translation_;
+
+					newAttackZone->Initialize(models_[1], newPos);
+					attackZones_.push_back(newAttackZone);
+				}
+				zoneRotate += 0.785398f;
+			}
+
+			for (int i = 0; i < 6; i++) {
+				EnemyAttackZone* newAttackZone = new EnemyAttackZone();
+				Vector3 newPos = {0.0f, 0.0f, 6.0f};
+				Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
+				newPos = TransformNormal(newPos, rotate);
+				newPos += worldTransform_.translation_;
+
+				newAttackZone->Initialize(models_[1], newPos);
+
+				zoneRotate += 1.0472f;
+				attackZones_.push_back(newAttackZone);
+			}
+			zoneRotate = 0.0f;
+			for (int i = 0; i < 12; i++) {
+				EnemyAttackZone* newAttackZone = new EnemyAttackZone();
+				Vector3 newPos = {0.0f, 0.0f, 15.0f};
+				Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
+				newPos = TransformNormal(newPos, rotate);
+				newPos += worldTransform_.translation_;
+
+				newAttackZone->Initialize(models_[1], newPos);
+
+				zoneRotate += 0.523599f;
+				attackZones_.push_back(newAttackZone);
+			}
+			attackCooltime_ = 60;
+		}
+	}
 }
 
 void Enemy::OnCollision([[maybe_unused]] Collider* other) {}
@@ -151,4 +225,12 @@ void Enemy::SettingLittles() {
 
 }
 
+void Enemy::SetLittleEnemyTarget(const Vector3& target) {
+	for (LittleEnemy* littleEnemy : littleEnemys_) {
+		littleEnemy->SetTargetPosision(target);
+	}
+}
+
 std::list<LittleEnemy*> Enemy::GetLittleEnemyCollider() { return littleEnemys_; }
+
+std::list<EnemyAttackZone*> Enemy::GetAttackZoneCollider() { return attackZones_; }

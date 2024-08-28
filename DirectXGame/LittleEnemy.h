@@ -44,7 +44,11 @@ public:
 
 	void SetSclae(const Vector3& scale);
 
+	void SetIsGetCaught(const bool is);
+
 	void SetPosition(const Vector3& pos);
+
+	void SetTargetPosision(const Vector3& target);
 
 	bool IsDead() const { return isDead_; }
 
@@ -53,6 +57,8 @@ private:
 	WorldTransform worldTransformBody_;
 	WorldTransform worldTransformL_arm_;
 	WorldTransform worldTransformR_arm_;
+
+	Vector3 targetPosition_;
 
 	SnowBall* snowball_;
 	bool isGetCaughtUp_ = false;

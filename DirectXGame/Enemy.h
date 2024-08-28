@@ -4,6 +4,7 @@
 #include "BaseCharacter.h"
 #include "ViewProjection.h"
 #include "LittleEnemy.h"
+#include "EnemyAttackZone.h"
 
 class Enemy : public BaseCharacter {
 public:
@@ -32,6 +33,8 @@ public:
 
 	void UpdatePartsGimmick();
 
+	void Attack();
+
 	void OnCollision([[maybe_unused]] Collider* other) override;
 
 	Vector3 GetCenterPosition() const override;
@@ -40,7 +43,11 @@ public:
 
 	void SettingLittles();
 
+	void SetLittleEnemyTarget(const Vector3& target);
+
 	std::list<LittleEnemy*> GetLittleEnemyCollider();
+
+	std::list<EnemyAttackZone*> GetAttackZoneCollider();
 
 private:
 
@@ -51,5 +58,7 @@ private:
 	static uint32_t nextNerialNumber_;
 
 	std::list<LittleEnemy*> littleEnemys_;
+	std::list<EnemyAttackZone*> attackZones_;
 
+	uint32_t attackCooltime_ = 60;
 };

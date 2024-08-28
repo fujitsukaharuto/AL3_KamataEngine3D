@@ -84,8 +84,10 @@ void GameScene::Update()
 
 	followCamera_->Update();
 
+	Vector3 littleEnemyTarget = player_->GetCenterPosisionOrigine();
 	for (std::unique_ptr<Enemy>& enemy : enemies_) {
 		enemy->Update();
+		enemy->SetLittleEnemyTarget(littleEnemyTarget);
 		if (Input::GetInstance()->TriggerKey(DIK_DELETE)) {
 			enemy->SettingLittles();
 		}

@@ -135,6 +135,7 @@ void SnowBall::OnCollision(Collider* other) {
 
 		LittleEnemy* newLittle = new LittleEnemy();
 		newLittle->Initialize(littleModel_);
+		newLittle->SetIsGetCaught(true);
 		Matrix4x4 invRotate = MakeRotateXYZMatrix(worldTransform_.rotation_);
 		invRotate = Inverse(invRotate);
 		Vector3 invrad = TransformNormal({0.0f, -1.0f, 0.0f}, invRotate);
