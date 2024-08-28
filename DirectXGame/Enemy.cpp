@@ -141,56 +141,6 @@ void Enemy::UpdatePartsGimmick()
 
 void Enemy::Attack() {
 
-	if (attackZones_.size() == 0) {
-		attackCooltime_--;
-		if (attackCooltime_ <= 0) {
-			float zoneRotate = 0.0f;
-
-			for (int i = 0; i < 6; i++) {
-				float interval = 6.0f;
-				for (int j = 0; j < 5; j++) {
-
-					EnemyAttackZone* newAttackZone = new EnemyAttackZone();
-					Vector3 newPos = {0.0f, 0.0f, interval};
-					interval += 6.0f;
-					Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
-					newPos = TransformNormal(newPos, rotate);
-					newPos += worldTransform_.translation_;
-
-					newAttackZone->Initialize(models_[1], newPos);
-					attackZones_.push_back(newAttackZone);
-				}
-				zoneRotate += 0.785398f;
-			}
-
-			for (int i = 0; i < 6; i++) {
-				EnemyAttackZone* newAttackZone = new EnemyAttackZone();
-				Vector3 newPos = {0.0f, 0.0f, 6.0f};
-				Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
-				newPos = TransformNormal(newPos, rotate);
-				newPos += worldTransform_.translation_;
-
-				newAttackZone->Initialize(models_[1], newPos);
-
-				zoneRotate += 1.0472f;
-				attackZones_.push_back(newAttackZone);
-			}
-			zoneRotate = 0.0f;
-			for (int i = 0; i < 12; i++) {
-				EnemyAttackZone* newAttackZone = new EnemyAttackZone();
-				Vector3 newPos = {0.0f, 0.0f, 15.0f};
-				Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
-				newPos = TransformNormal(newPos, rotate);
-				newPos += worldTransform_.translation_;
-
-				newAttackZone->Initialize(models_[1], newPos);
-
-				zoneRotate += 0.523599f;
-				attackZones_.push_back(newAttackZone);
-			}
-			attackCooltime_ = 60;
-		}
-	}
 }
 
 void Enemy::OnCollision([[maybe_unused]] Collider* other) {}

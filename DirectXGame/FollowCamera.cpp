@@ -2,6 +2,7 @@
 #include "Input.h"
 #include "MathCal.h"
 #include "LockOn.h"
+#include "ImGuiManager.h"
 
 FollowCamera::FollowCamera() {}
 
@@ -11,11 +12,19 @@ void FollowCamera::Initialize()
 {
 
 	viewProject_.Initialize();
+	viewProject_.rotation_.x = 0.47f;
+	viewProject_.UpdateMatrix();
 
 }
 
 void FollowCamera::Update()
 {
+
+	ImGui::Begin("folloCamera");
+	ImGui::SliderFloat("x", &viewProject_.rotation_.x, -4.0f, 4.0f);
+	ImGui::End();
+	viewProject_.UpdateMatrix();
+
 
 	if (lockOn_->ExistTarget()) {
 
@@ -30,7 +39,7 @@ void FollowCamera::Update()
 
 	} else {
 
-		XINPUT_STATE joyState;
+		/*XINPUT_STATE joyState;
 		if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 			const float kRotateSpeed = 0.05f;
 
@@ -39,7 +48,7 @@ void FollowCamera::Update()
 			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) {
 				destinationAngleY_ = target_->rotation_.y;
 			}
-		}
+		}*/
 
 		viewProject_.rotation_.y = LerpShortAngle(viewProject_.rotation_.y, destinationAngleY_, 0.4f);
 	}
@@ -48,7 +57,7 @@ void FollowCamera::Update()
 	}
 	Vector3 offset = OffsetCal();
 
-	viewProject_.translation_ = interTarget_ + offset;
+	viewProject_.translation_ = offset;
 
 	viewProject_.UpdateMatrix();
 	
@@ -81,7 +90,7 @@ void FollowCamera::Reset()
 
 Vector3 FollowCamera::OffsetCal() const {
 
-	Vector3 offset = {0.0f, 2.0f, -10.0f};
+	Vector3 offset = {0.0f, 10.0f, -30.0f};
 
 	Matrix4x4 rotateCamera = MakeRotateXYZMatrix(viewProject_.rotation_);
 	offset = TransformNormal(offset, rotateCamera);

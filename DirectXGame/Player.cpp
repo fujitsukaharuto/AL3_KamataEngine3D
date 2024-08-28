@@ -650,13 +650,15 @@ void Player::Move() {
 		if (ismoving) {
 			const float kCharacterSpeed = 0.3f;
 			velocity_ = velocity_.Normalize() * kCharacterSpeed;
-			Matrix4x4 rotateCamera = MakeRotateXYZMatrix(viewProjection_->rotation_);
+			Vector3 camerarotaition = viewProjection_->rotation_;
+			camerarotaition.x = 0.0f;
+			Matrix4x4 rotateCamera = MakeRotateXYZMatrix(camerarotaition);
 			velocity_ = TransformNormal(velocity_, rotateCamera);
 
 			worldTransform_.translation_ += velocity_;
 			targetRotate = std::atan2(velocity_.x, velocity_.z);
 			destinationAngleY_ = targetRotate;
-			worldTransform_.rotation_.y = LerpShortAngle(worldTransform_.rotation_.y, targetRotate, 0.075f);
+			/*worldTransform_.rotation_.y = LerpShortAngle(worldTransform_.rotation_.y, targetRotate, 0.075f);*/
 
 		} else if (lockOn_ && lockOn_->ExistTarget()) {
 			Vector3 lockOnPosition = lockOn_->GetTargetPosition();
