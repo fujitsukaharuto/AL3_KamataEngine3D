@@ -16,6 +16,7 @@
 #include "Enemy.h"
 #include "LockOn.h"
 #include "CollisionManager.h"
+#include "Effect.h"
 
 #include <memory>
 
@@ -87,6 +88,8 @@ private: // メンバ変数
 	std::unique_ptr<Model> enemyModelfightBody_;
 	std::unique_ptr<Model> enemyModelfightWeapon_;
 	std::list<std::unique_ptr<Enemy>> enemies_;
+
+	Effect* effect_;
 
 	std::unique_ptr<Model> skydomeModel_ = nullptr;
 	std::unique_ptr<Skydome> skydome_;

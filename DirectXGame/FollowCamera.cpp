@@ -81,7 +81,7 @@ void FollowCamera::Reset()
 
 Vector3 FollowCamera::OffsetCal() const {
 
-	Vector3 offset = {0.0f, 2.0f, -10.0f};
+	Vector3 offset = {0.0f, 6.0f, -20.0f};
 
 	Matrix4x4 rotateCamera = MakeRotateXYZMatrix(viewProject_.rotation_);
 	offset = TransformNormal(offset, rotateCamera);

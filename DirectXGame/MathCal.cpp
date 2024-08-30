@@ -24,6 +24,12 @@ Matrix4x4 MakeIdentity4x4() {
 	return result;
 }
 
+Matrix4x4 MakeShadow4x4() {
+	Matrix4x4 result = MakeIdentity4x4();
+	result.m[1][1] = 0;
+	return result;
+}
+
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
 	Matrix4x4 result = MakeIdentity4x4();
 

@@ -5,6 +5,7 @@
 #include "GlobalVariables.h"
 #include "LockOn.h"
 #include "CollisionTypeIdDef.h"
+#include "Effect.h"
 
 #include <cmath>
 #include <iostream>
@@ -512,7 +513,7 @@ void Player::BehaviorJumpInitialize()
 	worldTransformR_arm_.rotation_.z = 0;
 
 	//ジャンプ初速度
-	const float kJumpFirstSpeed = 1.0f;
+	const float kJumpFirstSpeed = 0.75f;
 	velocity_.y = kJumpFirstSpeed;
 
 }
@@ -537,66 +538,69 @@ void Player::BehaviorChargeUpdate() {
 	}
 
 
+
 	XINPUT_STATE joyStatePre;
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState) && Input::GetInstance()->GetJoystickStatePrevious(0, joyStatePre)) {
-
 		if (!(joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) && (joyStatePre.Gamepad.wButtons & XINPUT_GAMEPAD_A)) {
 			behaviorRequest_ = Behavior::kRoot;
-			snowBalls_.back()->SetRemove(true);
-			const float kBallSpeed = 0.5f;
-			Vector3 vel = {0.0f, 0.0f, 1.0f};
-			vel = vel.Normalize() * kBallSpeed;
-			Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
-			vel = TransformNormal(vel, rotatePlayer);
-			snowBalls_.back()->SetVelocity(vel);
-			snowBalls_.back()->SetRadius(snowBalls_.back()->GetRadius());
+			if (!snowBalls_.back()->IsRemove()) {
+				snowBalls_.back()->SetRemove(true);
+				const float kBallSpeed = 0.5f;
+				Vector3 vel = {0.0f, 0.0f, 1.0f};
+				vel = vel.Normalize() * kBallSpeed;
+				Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+				vel = TransformNormal(vel, rotatePlayer);
+				snowBalls_.back()->SetVelocity(vel);
+				snowBalls_.back()->SetRadius(snowBalls_.back()->GetRadius());
+			}
 		}
 	}
 
 	Move();
-	if (addSnowSize_) {
-		float newRad = snowBalls_.back()->GetRadius();
-		newRad += 0.01f;
-		snowBalls_.back()->SetSizeRadius(newRad);
+	if (!snowBalls_.back()->IsRemove()) {
+		if (addSnowSize_) {
+			float newRad = snowBalls_.back()->GetRadius();
+			newRad += 0.01f;
+			snowBalls_.back()->SetSizeRadius(newRad);
+		}
+
+		Vector3 oldpos = snowBalls_.back()->GetTrans();
+		const float kCharacterDistance = 1.0f;
+		Vector3 snowBallPos = {0.0f, 0.0f, 1.0f};
+		snowBallPos = snowBallPos.Normalize() * kCharacterDistance;
+
+		snowBallPos.z += snowBalls_.back()->GetRadius();
+		Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+		snowBallPos = TransformNormal(snowBallPos, rotatePlayer);
+
+		snowBallPos += worldTransform_.translation_;
+		snowBallPos.y += snowBalls_.back()->GetRadius();
+		snowBalls_.back()->SetTransform(snowBallPos);
+
+
+		Vector3 Differential = snowBallPos - oldpos;
+		Differential = Differential.Normalize();
+
+		Vector3 forward = {0.0f, 1.0f, 0.0f};
+		Vector3 rotateAxis = forward.Cross(Differential);
+		if (rotateAxis.Lenght() > 0.0f) {
+
+			rotateAxis = rotateAxis.Normalize();
+			float rotateAngle = (Differential.Lenght() / snowBalls_.back()->GetRadius());
+
+			Matrix4x4 rotateMat = MakeRotateAxisMatrix(rotateAxis, rotateAngle);
+
+			Matrix4x4 currentTransform = snowBalls_.back()->GetWorldMat();
+
+			currentTransform = Multiply(rotateMat, currentTransform);
+
+			Vector3 newRotate = ExtractEulerAngles(currentTransform);
+
+			snowBalls_.back()->SetRotate(newRotate);
+		}
+		
 	}
-
-	Vector3 oldpos = snowBalls_.back()->GetTrans();
-	const float kCharacterDistance = 1.0f;
-	Vector3 snowBallPos = {0.0f, 0.0f, 1.0f};
-	snowBallPos = snowBallPos.Normalize() * kCharacterDistance;
-
-	snowBallPos.z += snowBalls_.back()->GetRadius();
-	Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
-	snowBallPos = TransformNormal(snowBallPos, rotatePlayer);
-
-	snowBallPos += worldTransform_.translation_;
-	snowBallPos.y += snowBalls_.back()->GetRadius();
-	snowBalls_.back()->SetTransform(snowBallPos);
-
-
-	Vector3 Differential = snowBallPos - oldpos;
-	Differential = Differential.Normalize();
-
-	Vector3 forward = {0.0f, 1.0f, 0.0f};
-	Vector3 rotateAxis = forward.Cross(Differential);
-	if (rotateAxis.Lenght() > 0.0f) {
-
-		rotateAxis = rotateAxis.Normalize();
-		float rotateAngle = (Differential.Lenght() / snowBalls_.back()->GetRadius());
-
-
-		Matrix4x4 rotateMat = MakeRotateAxisMatrix(rotateAxis, rotateAngle);
-
-		Matrix4x4 currentTransform = snowBalls_.back()->GetWorldMat();
-
-		currentTransform = Multiply(rotateMat, currentTransform);
-
-		Vector3 newRotate = ExtractEulerAngles(currentTransform);
-
-		snowBalls_.back()->SetRotate(newRotate);
-	}
-
 
 
 	BaseCharacter::Update();
@@ -649,16 +653,24 @@ void Player::Move() {
 		destinationAngleY_ = targetRotate;
 		if (ismoving) {
 			const float kCharacterSpeed = 0.3f;
-			velocity_ = velocity_.Normalize() * kCharacterSpeed;
+			if (snowBalls_.size() != 0 && !(snowBalls_.back()->IsRemove())) {
+				if (snowBalls_.back()->GetRadius() < 1.5f) {
+					weight = 1.0f;
+				}
+			}
+			velocity_ = velocity_.Normalize() * kCharacterSpeed * weight;
 			Matrix4x4 rotateCamera = MakeRotateXYZMatrix(viewProjection_->rotation_);
 			velocity_ = TransformNormal(velocity_, rotateCamera);
+
+			Effect::GetInstance()->CreateWalk(worldTransform_.translation_);
 
 			worldTransform_.translation_ += velocity_;
 			targetRotate = std::atan2(velocity_.x, velocity_.z);
 			destinationAngleY_ = targetRotate;
 			worldTransform_.rotation_.y = LerpShortAngle(worldTransform_.rotation_.y, targetRotate, 0.075f);
 
-		} else if (lockOn_ && lockOn_->ExistTarget()) {
+		}
+		if (lockOn_ && lockOn_->ExistTarget()) {
 			Vector3 lockOnPosition = lockOn_->GetTargetPosition();
 			Vector3 sub = lockOnPosition - worldTransform_.translation_;
 
@@ -668,15 +680,11 @@ void Player::Move() {
 	}
 }
 
-void Player::InitializeFloatingGimmick()
-{
+void Player::InitializeFloatingGimmick() {
 	floatingParameter_ = 0.0f;
-
-
 }
 
-void Player::UpdateFloatingGimmick()
-{
+void Player::UpdateFloatingGimmick() {
 	float mpi = 3.14159265f;
 	int valueCycle = static_cast<int>(cycle_);
 	const float step = 2.0f * mpi / cycle_;
@@ -695,20 +703,14 @@ void Player::UpdateFloatingGimmick()
 	floatingParameter_ += step;
 	floatingParameter_ = std::fmod(floatingParameter_, 2.0f * mpi);
 
-	
 	worldTransformBody_.translation_.y = std::sin(floatingParameter_) * floatingAmplitude_;
-	
 }
 
-void Player::InitializeArmGimmick()
-{
-
+void Player::InitializeArmGimmick() {
 	armParameter_ = 0.0f;
-
 }
 
-void Player::UpdateArmGimmick()
-{
+void Player::UpdateArmGimmick() {
 	float mpi = 3.14159265f;
 	const float step = 2.0f * mpi / cycle_;
 #ifdef _DEBUG
@@ -739,22 +741,23 @@ void Player::OnCollision([[maybe_unused]] Collider* other) {
 		worldTransformBody_.rotation_.y = 0.0f;
 
 		if (behavior_ == Behavior::kAttack) {
-			snowBalls_.back()->SetRemove(true);
-			const float kBallSpeed = 2.0f;
-			Vector3 vel = {0.0f, 0.0f, 1.0f};
-			vel = vel.Normalize() * kBallSpeed;
-			Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
-			vel = TransformNormal(vel, rotatePlayer);
-			snowBalls_.back()->SetVelocity(vel);
+			if (!snowBalls_.size() == 0) {
+				if (!snowBalls_.back()->IsRemove()) {
+					snowBalls_.back()->SetRemove(true);
+					const float kBallSpeed = 2.0f;
+					Vector3 vel = {0.0f, 0.0f, 1.0f};
+					vel = vel.Normalize() * kBallSpeed;
+					Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+					vel = TransformNormal(vel, rotatePlayer);
+					snowBalls_.back()->SetVelocity(vel);
+				}
+			}
 		}
 	}
 }
 
-void Player::SetLockOn(const LockOn* target)
-{
-
+void Player::SetLockOn(const LockOn* target) {
 	lockOn_ = target;
-
 }
 
 Vector3 Player::GetCenterPosition() const {

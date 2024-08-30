@@ -11,6 +11,8 @@ Matrix4x4 Multiply(const Matrix4x4& matrix1, const Matrix4x4& matrix2);
 /// <returns>Matrix4x4</returns>
 Matrix4x4 MakeIdentity4x4();
 
+Matrix4x4 MakeShadow4x4();
+
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
 
 Matrix4x4 MakeScaleMatrix(const Vector3& scale);

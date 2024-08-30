@@ -65,8 +65,9 @@ void GameScene::Initialize() {
 	for (std::unique_ptr<Enemy>& enemy : enemies_) {
 		enemy->Initialize(enemyModels);
 	}
-	
 
+	effect_ = Effect::GetInstance();
+	effect_->Initialize();
 
 	skydome_ = std::make_unique<Skydome>();
 	skydome_->Initialize(skydomeModel_.get());
@@ -109,6 +110,8 @@ void GameScene::Update()
 	}
 
 #endif // _DEBUG
+
+	effect_->Update();
 
 	if (isDebugCameraMode_) {
 		debugCamera_->Update();
@@ -159,6 +162,7 @@ void GameScene::Draw() {
 	player_->Draw(viewProject_);
 	collisionManager_->Draw(viewProject_);
 
+	effect_->Draw(viewProject_);
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();

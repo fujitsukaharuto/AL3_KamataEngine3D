@@ -173,6 +173,7 @@ private:
 	WorkAttack workAttack_;
 
 	Vector3 velocity_ = {};
+	float weight = 1.0f;
 
 	uint32_t textureHandle_ = 0u;
 

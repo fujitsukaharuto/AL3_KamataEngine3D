@@ -1,6 +1,7 @@
 #include "SnowBall.h"
 #include "MathCal.h"
 #include "LittleEnemy.h"
+#include "ImGuiManager.h"
 #include <cassert>
 
 SnowBall::SnowBall() {}
@@ -44,7 +45,6 @@ void SnowBall::Update() {
 	
 		worldTransform_.translation_ += velocity_;
 		worldTransform_.scale_ = {sizeRadius_, sizeRadius_, sizeRadius_};
-		worldTransform_.translation_.y = sizeRadius_;
 
 		Vector3 Differential = velocity_;
 		Differential = Differential.Normalize();
@@ -54,6 +54,7 @@ void SnowBall::Update() {
 		if (rotateAxis.Lenght() > 0.0f) {
 
 			rotateAxis = rotateAxis.Normalize();
+
 			float rotateAngle = (Differential.Lenght() / sizeRadius_);
 
 			Matrix4x4 rotateMat = MakeRotateAxisMatrix(rotateAxis, rotateAngle);
@@ -65,8 +66,13 @@ void SnowBall::Update() {
 			Vector3 newRotate = ExtractEulerAngles(currentTransform);
 
 			worldTransform_.rotation_ = newRotate;
+			ImGui::Begin("size");
+			ImGui::Text("%f", rotateAngle);
+			ImGui::Text("%f", worldTransform_.rotation_.x);
+			ImGui::Text("%f", worldTransform_.rotation_.y);
+			ImGui::Text("%f", worldTransform_.rotation_.z);
+			ImGui::End();
 		}
-
 
 		worldTransform_.UpdateMatrix();
 		deathTimer_--;
@@ -85,6 +91,7 @@ void SnowBall::Update() {
 	for (LittleEnemy* littleE : littleEnemys_) {
 
 		littleE->Update();
+		littleE->SetSclae(littleE->GetOrigineScale() / sizeRadius_);
 	}
 
 }
@@ -123,7 +130,8 @@ void SnowBall::OnCollision(Collider* other) {
 	}
 	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kLittleEnemy)) {
 		littleEnemyCount_++;
-		sizeRadius_ += 0.5f;
+		sizeRadius_ += addRadius_;
+		worldTransform_.translation_.y += addRadius_;
 		Collider::SetRadius(sizeRadius_);
 
 
@@ -136,7 +144,7 @@ void SnowBall::OnCollision(Collider* other) {
 		LittleEnemy* newLittle = new LittleEnemy();
 		newLittle->Initialize(littleModel_);
 		newLittle->SetIsGetCaught(true);
-		Matrix4x4 invRotate = MakeRotateXYZMatrix(worldTransform_.rotation_);
+		Matrix4x4 invRotate = MakeRotateXYZMatrix((worldTransform_.rotation_));
 		invRotate = Inverse(invRotate);
 		Vector3 invrad = TransformNormal({0.0f, -1.0f, 0.0f}, invRotate);
 		newLittle->SetRotate(invrad);

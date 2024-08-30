@@ -20,6 +20,9 @@ Enemy::~Enemy() {
 	for (EnemyAttackZone* attackZone : attackZones_) {
 		delete attackZone;
 	}
+	for (StandbyOperation* standby : standbies_) {
+		delete standby;
+	}
 }
 
 void Enemy::Initialize(const std::vector<Model*>& models)
@@ -53,6 +56,17 @@ void Enemy::Initialize(const std::vector<Model*>& models)
 		littleEnemys_.push_back(newLittleEnemy);
 	}
 
+	for (int i = 0; i < 8; i++) {
+		StandbyOperation* newstandby = new StandbyOperation();
+
+		newstandby->Initialize({0.0f, 0.0f, 0.0f}, 1);
+		newstandby->TypeInitialize(0);
+		standbies_.push_back(newstandby);
+	}
+	StandbyOperation* newstandby = new StandbyOperation();
+	newstandby->Initialize({0.0f, 0.0f, 0.0f}, 1);
+	newstandby->TypeInitialize(1);
+	standbies_.push_back(newstandby);
 }
 
 void Enemy::Update()
@@ -83,7 +97,7 @@ void Enemy::Update()
 
 #endif // _DEBUG
 
-	Move();
+	//Move();
 	UpdatePartsGimmick();
 
 	Attack();
@@ -116,6 +130,22 @@ void Enemy::Draw(const ViewProjection& viewProjection)
 	for (EnemyAttackZone* attackZone : attackZones_) {
 		attackZone->Draw(viewProjection);
 	}
+	if (isStandby_) {
+		if (attazkType_ == AttackType::kDefault) {
+			for (StandbyOperation* standby : standbies_) {
+				if (standby->GetType() == 0) {
+					standby->Draw(viewProjection);
+				}
+			}
+		}
+		if (attazkType_ == AttackType::kFlattery) {
+			for (StandbyOperation* standby : standbies_) {
+				if (standby->GetType() == 1) {
+					standby->Draw(viewProjection);
+				}
+			}
+		}
+	}
 }
 
 void Enemy::Move()
@@ -141,56 +171,131 @@ void Enemy::UpdatePartsGimmick()
 
 void Enemy::Attack() {
 
-	if (attackZones_.size() == 0) {
-		attackCooltime_--;
-		if (attackCooltime_ <= 0) {
-			float zoneRotate = 0.0f;
+	if (attackCooltime_ == 0) {
+		switch (attazkType_) {
+		case AttackType::kFlattery:
 
-			for (int i = 0; i < 6; i++) {
+			if (occurrenceTime_ == 20) {
+				oldPlayerPos_ = playerPos_;
+			}
+			if (occurrenceTime_ == 0) {
+				EnemyAttackZone* newAttackZone = new EnemyAttackZone();
+				oldPlayerPos_.y = 0.0f;
+				Vector3 newPos = oldPlayerPos_;
+
+				newAttackZone->Initialize(models_[1], newPos);
+				attackZones_.push_back(newAttackZone);
+				occurrenceTime_ = 20;
+				occurrencesCount_++;
+			} else {
+				occurrenceTime_--;
+			}
+
+			if (occurrencesCount_ == 10) {
+				isStandby_ = false;
+				attazkType_ = AttackType::kDush;
+				occurrencesCount_ = 0;
+				occurrenceTime_ = 30;
+				attackCooltime_ = 300;
+			} else {
+				isStandby_ = true;
+				playerPos_.y += 0.02f;
+				for (StandbyOperation* standby : standbies_) {
+					standby->SetTransform(playerPos_);
+					standby->Update();
+				}
+			}
+
+			break;
+		case AttackType::kSummon:
+
+			SettingLittles();
+			attazkType_ = AttackType::kDefault;
+			occurrenceTime_ = 60;
+			attackCooltime_ = 300;
+
+			break;
+		case AttackType::kDush:
+
+			if (occurrenceTime_ == 30) {
+				oldPlayerPos_ = playerPos_;
+				oldPlayerPos_.y = 0.0f;
+				Vector3 sub = oldPlayerPos_ - worldTransform_.translation_;
+				sub = sub * 0.6f;
+				oldPlayerPos_ = oldPlayerPos_ + sub;
+			}
+			if (occurrenceTime_ == 0) {
+				Vector3 newPos = oldPlayerPos_;
+
+				worldTransform_.translation_ = Leap(worldTransform_.translation_, newPos, 0.1f);
+
+				float worldtoNewPosSubLength = std::abs(newPos.Lenght() - worldTransform_.translation_.Lenght());
+
+				if (worldtoNewPosSubLength < 0.5f) {
+					occurrencesCount_++;
+					occurrenceTime_ = 50;
+				}
+			} else {
+				occurrenceTime_--;
+			}
+
+			if (occurrencesCount_ == 2) {
+				attazkType_ = AttackType::kSummon;
+				occurrencesCount_ = 0;
+				occurrenceTime_ = 30;
+				attackCooltime_ = 300;
+			}
+
+			break;
+		case AttackType::kDefault:
+		default:
+
+			if (occurrenceTime_ == 0) {
+
 				float interval = 6.0f;
-				for (int j = 0; j < 5; j++) {
+				for (int i = 0; i < 7; i++) {
+					float zoneRotate = 0.0f;
 
-					EnemyAttackZone* newAttackZone = new EnemyAttackZone();
-					Vector3 newPos = {0.0f, 0.0f, interval};
+					for (int j = 0; j < 8; j++) {
+
+						EnemyAttackZone* newAttackZone = new EnemyAttackZone();
+						Vector3 newPos = {0.0f, 0.0f, interval};
+
+						Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
+						newPos = TransformNormal(newPos, rotate);
+						newPos += worldTransform_.translation_;
+						zoneRotate += 0.785398f;
+
+						newAttackZone->Initialize(models_[1], newPos);
+						attackZones_.push_back(newAttackZone);
+					}
 					interval += 6.0f;
+				}
+				attazkType_ = AttackType::kFlattery;
+				isStandby_ = false;
+				occurrenceTime_ = 30;
+				attackCooltime_ = 300;
+			} else {
+				isStandby_ = true;
+				occurrenceTime_--;
+				float zoneRotate = 0.0f;
+				for (StandbyOperation* standby : standbies_) {
+					Vector3 newPos = {0.0f, 0.1f, 21.0f};
 					Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
 					newPos = TransformNormal(newPos, rotate);
 					newPos += worldTransform_.translation_;
-
-					newAttackZone->Initialize(models_[1], newPos);
-					attackZones_.push_back(newAttackZone);
+					standby->SetRotate({0.0f, zoneRotate, 0.0f});
+					zoneRotate += 0.785398f;
+					standby->SetTransform(newPos);
+					standby->Update();
 				}
-				zoneRotate += 0.785398f;
 			}
-
-			for (int i = 0; i < 6; i++) {
-				EnemyAttackZone* newAttackZone = new EnemyAttackZone();
-				Vector3 newPos = {0.0f, 0.0f, 6.0f};
-				Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
-				newPos = TransformNormal(newPos, rotate);
-				newPos += worldTransform_.translation_;
-
-				newAttackZone->Initialize(models_[1], newPos);
-
-				zoneRotate += 1.0472f;
-				attackZones_.push_back(newAttackZone);
-			}
-			zoneRotate = 0.0f;
-			for (int i = 0; i < 12; i++) {
-				EnemyAttackZone* newAttackZone = new EnemyAttackZone();
-				Vector3 newPos = {0.0f, 0.0f, 15.0f};
-				Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
-				newPos = TransformNormal(newPos, rotate);
-				newPos += worldTransform_.translation_;
-
-				newAttackZone->Initialize(models_[1], newPos);
-
-				zoneRotate += 0.523599f;
-				attackZones_.push_back(newAttackZone);
-			}
-			attackCooltime_ = 60;
+			break;
 		}
+	} else {
+		attackCooltime_--;
 	}
+
 }
 
 void Enemy::OnCollision([[maybe_unused]] Collider* other) {}
@@ -209,23 +314,36 @@ uint32_t Enemy::GetSerialNumber() const { return serialNumber_; }
 void Enemy::SettingLittles() {
 
 	if (littleEnemys_.size() == 0) {
-		float newPos = 2.0f;
-		for (int i = 0; i < 10; i++) {
-			LittleEnemy* newLittleEnemy = new LittleEnemy();
 
-			Vector3 newLittleEPos = {newPos, 0.0f, newPos * 0.5f};
-			newPos += 2.0f;
+		float interval = 6.0f;
 
-			newLittleEnemy->Initialize(models_);
-			newLittleEnemy->SetPosition(newLittleEPos);
+		for (int i = 0; i < 2; i++) {
+			float zoneRotate = 0.0f;
 
-			littleEnemys_.push_back(newLittleEnemy);
+			for (int j = 0; j < 8; j++) {
+
+				Vector3 newPos = {0.0f, 0.0f, interval};
+
+				Matrix4x4 rotate = MakeRotateYMatrix(zoneRotate);
+				newPos = TransformNormal(newPos, rotate);
+				newPos += worldTransform_.translation_;
+				zoneRotate += 0.785398f;
+
+				LittleEnemy* newLittleEnemy = new LittleEnemy();
+
+				newLittleEnemy->Initialize(models_);
+				newLittleEnemy->SetPosition(newPos);
+
+				littleEnemys_.push_back(newLittleEnemy);
+			}
+			interval += 6.0f;
 		}
 	}
 
 }
 
 void Enemy::SetLittleEnemyTarget(const Vector3& target) {
+	playerPos_ = target;
 	for (LittleEnemy* littleEnemy : littleEnemys_) {
 		littleEnemy->SetTargetPosision(target);
 	}

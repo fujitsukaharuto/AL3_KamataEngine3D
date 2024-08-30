@@ -53,8 +53,9 @@ void LittleEnemy::Draw(const ViewProjection& viewProjection) {
 
 void LittleEnemy::Move() {
 
-	const float kSpeed = 0.1f;
+	const float kSpeed = 0.2f;
 
+	targetPosition_.y = 0.0f;
 	Vector3 toTarget = targetPosition_ - GetCenterPosition();
 	Vector3 norToTarget = toTarget.Normalize();
 	Vector3 norVelocity = norToTarget * kSpeed;

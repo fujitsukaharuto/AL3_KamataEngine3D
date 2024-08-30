@@ -52,6 +52,7 @@ private:
 	int32_t deathTimer_ = 120;
 
 	float sizeRadius_ = 0.5f;
+	float addRadius_ = 0.5f;
 
 	bool isRemove_ = false;
 	bool isDead_ = false;
