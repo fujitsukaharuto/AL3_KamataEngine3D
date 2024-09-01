@@ -43,6 +43,8 @@ public:
 
 	void SetLittleModel(std::vector<Model*> model);
 
+	void SetDeath() { isDead_ = true; }
+
 private:
 
 	Model* model_ = nullptr;

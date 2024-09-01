@@ -22,6 +22,8 @@ public:
 
 	bool IsDisappear() const { return isDisappear_; }
 
+	void SetDisappear() { isDisappear_ = true; }
+
 private:
 
 	Model* model_ = nullptr;

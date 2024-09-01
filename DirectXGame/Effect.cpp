@@ -21,6 +21,14 @@ void Effect::Initialize() {
 
 }
 
+void Effect::SceneReset() {
+
+	for (Particle* particle : particles_) {
+		particle->setDeath();
+	}
+
+}
+
 void Effect::Update() {
 
 	particles_.remove_if([](Particle* particle) {

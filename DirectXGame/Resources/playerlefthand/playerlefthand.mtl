@@ -1,7 +1,7 @@
-# Blender 4.1.1 MTL File: 'pppplayer.blend'
+# Blender 4.1.1 MTL File: 'playerlefthand.blend'
 # www.blender.org
 
-newmtl Material1
+newmtl マテリアル.002
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.000000 0.000000 0.000000

@@ -1,6 +1,6 @@
 #include "GameScene.h"
-#include "TextureManager.h"
 #include "AxisIndicator.h"
+#include "TextureManager.h"
 
 #include <cassert>
 
@@ -35,19 +35,17 @@ void GameScene::Initialize() {
 	modelFighterR_arm_.reset(Model::CreateFromOBJ("playerrighthand", true));
 	modelPlayerWeapon_.reset(Model::CreateFromOBJ("playerweapon", true));
 	modelPlayerBullet_.reset(Model::CreateSphere());
-	std::vector<Model*> playerModels = {modelFighterBody_.get(), modelFighterHead_.get(),
-		modelFighterL_arm_.get(), modelFighterR_arm_.get(),
-		modelPlayerWeapon_.get(), modelPlayerBullet_.get()};
-	
+	std::vector<Model*> playerModels = {modelFighterBody_.get(), modelFighterHead_.get(), modelFighterL_arm_.get(), modelFighterR_arm_.get(), modelPlayerWeapon_.get(), modelPlayerBullet_.get()};
 
 	enemyModelfightBody_.reset(Model::CreateFromOBJ("enemybody", true));
 	enemyModelfightWeapon_.reset(Model::CreateFromOBJ("enemyweapon", true));
-	std::vector<Model*> enemyModels = {
-		enemyModelfightBody_.get(), enemyModelfightWeapon_.get()};
+	enemyModelfightHead_.reset(Model::CreateFromOBJ("enemyhead", true));
+	enemyModelfightL_arm_.reset(Model::CreateFromOBJ("enemylefthand", true));
+	enemyModelfightR_arm_.reset(Model::CreateFromOBJ("enemyrighthand", true));
+	std::vector<Model*> enemyModels = {enemyModelfightBody_.get(), enemyModelfightHead_.get(), enemyModelfightL_arm_.get(), enemyModelfightR_arm_.get(), enemyModelfightWeapon_.get()};
 
 	skydomeModel_.reset(Model::CreateFromOBJ("skydome", true));
 	groundModel_.reset(Model::CreateFromOBJ("ground", true));
-
 
 	player_ = std::make_unique<Player>();
 	player_->Initialize(playerModels);
@@ -57,7 +55,6 @@ void GameScene::Initialize() {
 	followCamera_->SetTarget(&player_->GetWorldTransform());
 	followCamera_->SetLockOn(lockOn_.get());
 	player_->SetViewProjection(&followCamera_->GetViewProjection());
-
 
 	for (int i = 0; i < 1; i++) {
 		enemies_.push_back(std::make_unique<Enemy>());
@@ -72,59 +69,225 @@ void GameScene::Initialize() {
 	skydome_ = std::make_unique<Skydome>();
 	skydome_->Initialize(skydomeModel_.get());
 
-
 	ground_ = std::make_unique<Ground>();
 	ground_->Initialize(groundModel_.get());
-
 }
 
-void GameScene::Update()
-{
-	
-	player_->Update();
+void GameScene::Update() {
 
-	followCamera_->Update();
+	if (sceneTypeRequest_) {
+		sceneType_ = sceneTypeRequest_.value();
+		switch (sceneType_) {
+		case SceneType::title:
+			for (std::unique_ptr<Enemy>& enemy : enemies_) {
+				enemy->SceneReset();
+			}
+			player_->SceneReset();
+			effect_->SceneReset();
+			collisionManager_->Reset();
+			followCamera_->Reset();
 
-	Vector3 littleEnemyTarget = player_->GetCenterPosisionOrigine();
-	for (std::unique_ptr<Enemy>& enemy : enemies_) {
-		enemy->Update();
-		enemy->SetLittleEnemyTarget(littleEnemyTarget);
-		if (Input::GetInstance()->TriggerKey(DIK_DELETE)) {
-			enemy->SettingLittles();
+			isClear_ = false;
+			isGameover_ = false;
+
+			break;
+		case SceneType::tutorial:
+
+			break;
+		case SceneType::game:
+			for (std::unique_ptr<Enemy>& enemy : enemies_) {
+				enemy->SceneReset();
+			}
+			player_->SceneReset();
+			effect_->SceneReset();
+			collisionManager_->Reset();
+			followCamera_->Reset();
+
+			break;
+		case SceneType::gameClear:
+
+			break;
+		case SceneType::gameOver:
+
+			break;
+		default:
+			break;
 		}
+		sceneTypeRequest_ = std::nullopt;
 	}
 
-	lockOn_->Update(enemies_, viewProject_);
+	XINPUT_STATE joyState;
+	XINPUT_STATE joyStatePre;
 
-	CheckAllCollisions();
-	collisionManager_->UpdateWorldTransform();
+	switch (sceneType_) {
+	case SceneType::title:
+
+		if (Input::GetInstance()->GetJoystickState(0, joyState)) {
+			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
+				sceneChangeTimer_ = 40;
+				isSceneChange_ = true;
+			}
+		}
+		if (isSceneChange_) {
+			if (sceneChangeTimer_ > 0) {
+				sceneChangeTimer_--;
+			} else {
+				sceneTypeRequest_ = SceneType::tutorial;
+				isSceneChange_ = false;
+			}
+		}
+
+		break;
+	case SceneType::tutorial:
+
+		if (Input::GetInstance()->GetJoystickState(0, joyState)) {
+			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_START) {
+				sceneChangeTimer_ = 40;
+				isSceneChange_ = true;
+			}
+		}
+		if (isSceneChange_) {
+			if (sceneChangeTimer_ > 0) {
+				sceneChangeTimer_--;
+			} else {
+				sceneTypeRequest_ = SceneType::game;
+				isSceneChange_ = false;
+			}
+		} else {
+			player_->Update();
+
+			followCamera_->Update();
+
+			effect_->Update();
+
+		}
+
+		if (isDebugCameraMode_) {
+			debugCamera_->Update();
+			viewProject_.matView = debugCamera_->GetViewProjection().matView;
+			viewProject_.matProjection = debugCamera_->GetViewProjection().matProjection;
+			viewProject_.TransferMatrix();
+		} else {
+			viewProject_.UpdateMatrix();
+			viewProject_.matView = followCamera_->GetViewProjection().matView;
+			viewProject_.matProjection = followCamera_->GetViewProjection().matProjection;
+			viewProject_.TransferMatrix();
+		}
+
+		break;
+	case SceneType::game:
+
+#pragma region Game
+
+		player_->Update();
+
+		followCamera_->Update();
+
+		Vector3 littleEnemyTarget = player_->GetCenterPosisionOrigine();
+		for (std::unique_ptr<Enemy>& enemy : enemies_) {
+			enemy->Update();
+			enemy->SetLittleEnemyTarget(littleEnemyTarget);
+			if (Input::GetInstance()->TriggerKey(DIK_DELETE)) {
+				enemy->SettingLittles();
+			}
+		}
+
+		lockOn_->Update(enemies_, viewProject_);
+
+		CheckAllCollisions();
+		collisionManager_->UpdateWorldTransform();
 
 #ifdef _DEBUG
 
-	if (input_->TriggerKey(DIK_F12)) {
-		if (isDebugCameraMode_) {
-			isDebugCameraMode_ = false;
-		} else {
-			isDebugCameraMode_ = true;
+		if (input_->TriggerKey(DIK_F12)) {
+			if (isDebugCameraMode_) {
+				isDebugCameraMode_ = false;
+			} else {
+				isDebugCameraMode_ = true;
+			}
 		}
-	}
 
 #endif // _DEBUG
 
-	effect_->Update();
+		effect_->Update();
 
-	if (isDebugCameraMode_) {
-		debugCamera_->Update();
-		viewProject_.matView = debugCamera_->GetViewProjection().matView;
-		viewProject_.matProjection = debugCamera_->GetViewProjection().matProjection;
-		viewProject_.TransferMatrix();
-	} else {
-		viewProject_.UpdateMatrix();
-		viewProject_.matView = followCamera_->GetViewProjection().matView;
-		viewProject_.matProjection = followCamera_->GetViewProjection().matProjection;
-		viewProject_.TransferMatrix();
+		if (isDebugCameraMode_) {
+			debugCamera_->Update();
+			viewProject_.matView = debugCamera_->GetViewProjection().matView;
+			viewProject_.matProjection = debugCamera_->GetViewProjection().matProjection;
+			viewProject_.TransferMatrix();
+		} else {
+			viewProject_.UpdateMatrix();
+			viewProject_.matView = followCamera_->GetViewProjection().matView;
+			viewProject_.matProjection = followCamera_->GetViewProjection().matProjection;
+			viewProject_.TransferMatrix();
+		}
+
+		if (player_->GetLifeCount() == 0) {
+			isSceneChange_ = true;
+			isGameover_ = true;
+		}
+		for (std::unique_ptr<Enemy>& enemy : enemies_) {
+			if (enemy->GetLifeCount() == 0) {
+				isSceneChange_ = true;
+				isClear_ = true;
+			}
+		}
+
+		if (isSceneChange_) {
+			if (sceneChangeTimer_ > 0) {
+				sceneChangeTimer_--;
+			} else {
+				if (isGameover_) {
+					sceneTypeRequest_ = SceneType::gameOver;
+					isSceneChange_ = false;
+				} else if (isClear_) {
+					sceneTypeRequest_ = SceneType::gameClear;
+					isSceneChange_ = false;
+				}
+			}
+		}
+
+#pragma endregion
+
+		break;
+	case SceneType::gameClear:
+
+		if ((Input::GetInstance()->GetJoystickState(0, joyState))&&(Input::GetInstance()->GetJoystickStatePrevious(0,joyStatePre))) {
+			if ((joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) && !(joyStatePre.Gamepad.wButtons & XINPUT_GAMEPAD_A)) {
+				sceneChangeTimer_ = 40;
+				isSceneChange_ = true;
+			}
+		}
+		if (isSceneChange_) {
+			if (sceneChangeTimer_ > 0) {
+				sceneChangeTimer_--;
+			} else {
+				sceneTypeRequest_ = SceneType::title;
+				isSceneChange_ = false;
+			}
+		}
+
+		break;
+	case SceneType::gameOver:
+
+		if ((Input::GetInstance()->GetJoystickState(0, joyState)) && (Input::GetInstance()->GetJoystickStatePrevious(0, joyStatePre))) {
+			if ((joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) && !(joyStatePre.Gamepad.wButtons & XINPUT_GAMEPAD_A)) {
+				sceneChangeTimer_ = 40;
+				isSceneChange_ = true;
+			}
+		}
+		if (isSceneChange_) {
+			if (sceneChangeTimer_ > 0) {
+				sceneChangeTimer_--;
+			} else {
+				sceneTypeRequest_ = SceneType::title;
+				isSceneChange_ = false;
+			}
+		}
+
+		break;
 	}
-
 }
 
 void GameScene::Draw() {
@@ -154,15 +317,35 @@ void GameScene::Draw() {
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>
 
-	skydome_->Draw(viewProject_);
-	ground_->Draw(viewProject_);
-	for (std::unique_ptr<Enemy>& enemy : enemies_) {
-		enemy->Draw(viewProject_);
-	}
-	player_->Draw(viewProject_);
-	collisionManager_->Draw(viewProject_);
+	switch (sceneType_) {
+	case SceneType::title:
+		break;
+	case SceneType::tutorial:
 
-	effect_->Draw(viewProject_);
+		skydome_->Draw(viewProject_);
+		ground_->Draw(viewProject_);
+		player_->Draw(viewProject_);
+		effect_->Draw(viewProject_);
+
+		break;
+	case SceneType::game:
+
+		skydome_->Draw(viewProject_);
+		ground_->Draw(viewProject_);
+		for (std::unique_ptr<Enemy>& enemy : enemies_) {
+			enemy->Draw(viewProject_);
+		}
+		player_->Draw(viewProject_);
+		collisionManager_->Draw(viewProject_);
+
+		effect_->Draw(viewProject_);
+
+		break;
+	case SceneType::gameClear:
+		break;
+	case SceneType::gameOver:
+		break;
+	}
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
@@ -176,7 +359,25 @@ void GameScene::Draw() {
 	/// ここに前景スプライトの描画処理を追加できる
 	/// </summary>
 
-	lockOn_->Draw();
+	switch (sceneType_) {
+	case SceneType::title:
+		break;
+	case SceneType::tutorial:
+		break;
+	case SceneType::game:
+
+			lockOn_->Draw();
+
+		for (std::unique_ptr<Enemy>& enemy : enemies_) {
+			enemy->DrawSprite();
+		}
+
+		break;
+	case SceneType::gameClear:
+		break;
+	case SceneType::gameOver:
+		break;
+	}
 
 	// スプライト描画後処理
 	Sprite::PostDraw();
@@ -196,8 +397,8 @@ void GameScene::CheckAllCollisions() {
 		collisionManager_->AddCollider(i);
 	}
 
-	//敵について
-	for (const std::unique_ptr<Enemy>&  enemy : enemies_) {
+	// 敵について
+	for (const std::unique_ptr<Enemy>& enemy : enemies_) {
 		collisionManager_->AddCollider(enemy.get());
 		for (auto& i : enemy->GetLittleEnemyCollider()) {
 			collisionManager_->AddCollider(i);
@@ -205,5 +406,4 @@ void GameScene::CheckAllCollisions() {
 	}
 
 	collisionManager_->CheckAllCollisions();
-
 }

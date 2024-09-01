@@ -64,14 +64,18 @@ void SnowBall::Update() {
 			currentTransform = Multiply(rotateMat, currentTransform);
 
 			Vector3 newRotate = ExtractEulerAngles(currentTransform);
-
 			worldTransform_.rotation_ = newRotate;
+
+#ifdef _DEBUG
+
 			ImGui::Begin("size");
 			ImGui::Text("%f", rotateAngle);
 			ImGui::Text("%f", worldTransform_.rotation_.x);
 			ImGui::Text("%f", worldTransform_.rotation_.y);
 			ImGui::Text("%f", worldTransform_.rotation_.z);
 			ImGui::End();
+
+#endif // _DEBUG
 		}
 
 		worldTransform_.UpdateMatrix();

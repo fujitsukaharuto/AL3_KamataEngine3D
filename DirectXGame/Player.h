@@ -66,6 +66,8 @@ public:
 	/// <param name="textureHandle">テクスチャハンドル</param>
 	void Initialize(const std::vector<Model*>& models) override;
 
+	void SceneReset();
+
 	/// <summary>
 	/// 更新
 	/// </summary>
@@ -148,6 +150,8 @@ public:
 
 	bool GetIsAttack() const;
 
+	uint32_t GetLifeCount() { return lifeCount_; }
+
 	//調整項目の適用
 	void ApplyGlobalVariables();
 
@@ -182,7 +186,7 @@ private:
 	float floatingAmplitude_ = 0.175f;
 
 	float armParameter_ = 0.0f;
-	float armAmplitude_ = 0.175f;
+	float armAmplitude_ = 0.275f;
 
 
 	WorkDash workDash_;
@@ -194,5 +198,10 @@ private:
 	bool addSnowSize_ = false;
 
 	std::vector<Model*> littleModel_;
+
+
+
+	uint32_t lifeCount_ = 4;
+	uint32_t invincibilityTime_ = 0;
 
 };

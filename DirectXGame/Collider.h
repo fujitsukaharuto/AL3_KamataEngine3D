@@ -26,6 +26,8 @@ public:
 
 	uint32_t GetTypeID() const;
 
+	float GetColliderSize() const; 
+
 	void SetTypeID(uint32_t typeID);
 
 private:

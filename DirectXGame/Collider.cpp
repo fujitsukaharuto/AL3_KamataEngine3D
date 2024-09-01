@@ -30,4 +30,6 @@ void Collider::SetRadius(const float rad) {
 
 uint32_t Collider::GetTypeID() const { return typeID_; }
 
+float Collider::GetColliderSize() const { return radius_; }
+
 void Collider::SetTypeID(uint32_t typeID) { typeID_ = typeID; }

@@ -16,6 +16,8 @@ public:
 
 	void Initialize();
 
+	void SceneReset();
+
 	void Update();
 
 	void Draw(const ViewProjection& viewProjection);

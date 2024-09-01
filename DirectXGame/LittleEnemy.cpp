@@ -11,23 +11,16 @@ void LittleEnemy::Initialize(const std::vector<Model*>& models) {
 
 	BaseCharacter::Initialize(models);
 	worldTransformBody_.Initialize();
-	worldTransformL_arm_.Initialize();
-	worldTransformR_arm_.Initialize();
 
 	worldTransformBody_.parent_ = &worldTransform_;
-	worldTransformL_arm_.parent_ = &worldTransformBody_;
-	worldTransformR_arm_.parent_ = &worldTransformBody_;
 
-	worldTransform_.translation_ = {5.0f, 0.0f, 0.0f};
-	worldTransformL_arm_.translation_ = {-0.874f, 0.455f, 0.0f};
-	worldTransformR_arm_.translation_ = {0.874f, 0.455f, 0.0f};
 
+	worldTransform_.translation_ = {0.0f, 0.0f, 0.0f};
+	worldTransformBody_.translation_ = {0.0f, 0.5f, 0.0f};
 	worldTransform_.scale_ = {0.5f, 0.5f, 0.5f};
 
 	worldTransform_.UpdateMatrix();
 	worldTransformBody_.UpdateMatrix();
-	worldTransformL_arm_.UpdateMatrix();
-	worldTransformR_arm_.UpdateMatrix();
 
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kLittleEnemy));
 	Collider::SetRadius(0.5f);
@@ -41,14 +34,10 @@ void LittleEnemy::Update() {
 
 	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
-	worldTransformL_arm_.UpdateMatrix();
-	worldTransformR_arm_.UpdateMatrix();
 }
 
 void LittleEnemy::Draw(const ViewProjection& viewProjection) {
 	models_[0]->Draw(worldTransformBody_, viewProjection);
-	models_[1]->Draw(worldTransformL_arm_, viewProjection);
-	models_[1]->Draw(worldTransformR_arm_, viewProjection);
 }
 
 void LittleEnemy::Move() {

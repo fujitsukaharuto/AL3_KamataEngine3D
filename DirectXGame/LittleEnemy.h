@@ -52,11 +52,11 @@ public:
 
 	bool IsDead() const { return isDead_; }
 
+	void SetDeath() { isDead_ = true; }
+
 private:
 
 	WorldTransform worldTransformBody_;
-	WorldTransform worldTransformL_arm_;
-	WorldTransform worldTransformR_arm_;
 
 	Vector3 targetPosition_;
 

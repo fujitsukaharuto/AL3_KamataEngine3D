@@ -121,7 +121,11 @@ void GlobalVariables::SaveFile(const std::string& groupName)
 	// ファイルオープン失敗か？
 	if (ofs.fail()) {
 		std::string message = "Failed open data file for write.";
+
+#ifdef _DEBUG
 		MessageBoxA(nullptr, message.c_str(), "GlobalVariables", 0);
+#endif // _DEBUG
+
 		assert(0);
 		return;
 	}
@@ -170,7 +174,11 @@ void GlobalVariables::LoadFile(const std::string& groupName)
 	// オープン失敗
 	if (ifs.fail()) {
 		std::string message = "Failed open data file for write.";
+
+#ifdef _DEBUG
 		MessageBoxA(nullptr, message.c_str(), "GlobalVariables", 0);
+#endif // _DEBUG
+
 		assert(0);
 		return;
 	}

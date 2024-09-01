@@ -20,7 +20,13 @@
 
 #include <memory>
 
-
+enum class SceneType : uint32_t {
+	title,
+	tutorial,
+	game,
+	gameClear,
+	gameOver,
+};
 
 /// <summary>
 /// ゲームシーン
@@ -62,11 +68,24 @@ private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
 	Audio* audio_ = nullptr;
+	Effect* effect_;
 
 	std::unique_ptr<DebugCamera> debugCamera_ = nullptr;
 	bool isDebugCameraMode_ = false;
 
 	ViewProjection viewProject_;
+
+	SceneType sceneType_ = SceneType::title;
+	std::optional<SceneType> sceneTypeRequest_ = std::nullopt;
+
+	uint32_t sceneChangeTimer_ = 0;
+	bool isSceneChange_ = false;
+	bool isClear_ = false;
+	bool isGameover_ = false;
+
+	/// <summary>
+	/// ゲームシーン用
+	/// </summary>
 
 	std::unique_ptr<LockOn> lockOn_;
 
@@ -81,15 +100,15 @@ private: // メンバ変数
 	std::unique_ptr<Model> modelFighterR_arm_;
 	std::unique_ptr<Player> player_;
 
-
 	std::unique_ptr<Model> modelPlayerWeapon_;
 	std::unique_ptr<Model> modelPlayerBullet_;
 
 	std::unique_ptr<Model> enemyModelfightBody_;
+	std::unique_ptr<Model> enemyModelfightHead_;
+	std::unique_ptr<Model> enemyModelfightL_arm_;
+	std::unique_ptr<Model> enemyModelfightR_arm_;
 	std::unique_ptr<Model> enemyModelfightWeapon_;
 	std::list<std::unique_ptr<Enemy>> enemies_;
-
-	Effect* effect_;
 
 	std::unique_ptr<Model> skydomeModel_ = nullptr;
 	std::unique_ptr<Skydome> skydome_;
@@ -97,7 +116,4 @@ private: // メンバ変数
 	std::unique_ptr<Model> groundModel_ = nullptr;
 	std::unique_ptr<Ground> ground_;
 
-	/// <summary>
-	/// ゲームシーン用
-	/// </summary>
 };

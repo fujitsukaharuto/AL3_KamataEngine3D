@@ -1,16 +1,15 @@
 #include "Player.h"
-#include "Input.h"
-#include "MathCal.h"
-#include "ImGuiManager.h"
-#include "GlobalVariables.h"
-#include "LockOn.h"
 #include "CollisionTypeIdDef.h"
 #include "Effect.h"
+#include "GlobalVariables.h"
+#include "ImGuiManager.h"
+#include "Input.h"
+#include "LockOn.h"
+#include "MathCal.h"
 
+#include <cassert>
 #include <cmath>
 #include <iostream>
-#include <cassert>
-
 
 enum PlayerModelIndex {
 	kModelIndexBody = 0,
@@ -18,16 +17,16 @@ enum PlayerModelIndex {
 	kModelIndexL_arm = 2,
 	kModelIndexR_arm = 3,
 	kModelIndexWeapon = 4,
-	kModelIndexBullet =5,
+	kModelIndexBullet = 5,
 };
 
 const std::array<Player::ConstAttack, Player::ComboNum> Player::kConstAttacks_ = {
-	{
+    {
      // 振りかぶり、攻撃前硬直、攻撃振り時間、硬直
-		{0, 0, 40, 0, 0.0f, 0.0f, 0.15f},
-		{15, 5, 35, 0, 0.2f, 0.0f, 0.0f},
-		{0, 10, 35, 30, 0.2f, 0.0f, 0.0f},
-	}
+        {0, 0, 40, 0, 0.0f, 0.0f, 0.15f},
+     {15, 5, 35, 0, 0.2f, 0.0f, 0.0f},
+     {0, 10, 35, 30, 0.2f, 0.0f, 0.0f},
+     }
 };
 
 Player::Player() {}
@@ -37,11 +36,10 @@ Player::~Player() {
 	for (SnowBall* ball : snowBalls_) {
 		delete ball;
 	}
-
 }
 
 void Player::Initialize(const std::vector<Model*>& models) {
-	
+
 	BaseCharacter::Initialize(models);
 	hammer_ = std::make_unique<Hammer>();
 	hammer_->Initialize(models_[kModelIndexWeapon]);
@@ -86,8 +84,22 @@ void Player::Initialize(const std::vector<Model*>& models) {
 	hammer_->UpdateWorldTransform();
 }
 
-void Player::Update()
-{
+void Player::SceneReset() {
+
+	worldTransform_.translation_ = {0.0f, 0.0f, 0.0f};
+	worldTransform_.rotation_ = {0.0f, 0.0f, 0.0f};
+	behaviorRequest_ = Behavior::kRoot;
+
+	for (SnowBall* ball : snowBalls_) {
+		ball->SetDeath();
+	}
+
+	lifeCount_ = 4;
+	invincibilityTime_ = 0;
+
+}
+
+void Player::Update() {
 	snowBalls_.remove_if([](SnowBall* ball) {
 		if (ball->IsDead()) {
 			delete ball;
@@ -135,16 +147,14 @@ void Player::Update()
 
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
-		if (workAttack_.comboIndex == 0 && workAttack_.attackParameter_ == 0) {
-			if (behavior_ != Behavior::kJump && behavior_ != Behavior::kAttack) {
-				if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
-					behaviorRequest_ = Behavior::kAttack;
-					behaviorTimer_ = 60.0f;
-				}
+		if (behavior_ != Behavior::kJump && behavior_ != Behavior::kAttack && invincibilityTime_ == 0) {
+			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
+				behaviorRequest_ = Behavior::kAttack;
+				behaviorTimer_ = 60.0f;
 			}
 		}
 	}
-	if (behaviorTimer_>=0) {
+	if (behaviorTimer_ >= 0) {
 		behaviorTimer_--;
 	}
 
@@ -152,10 +162,12 @@ void Player::Update()
 		ball->Update();
 	}
 
+	if (invincibilityTime_ > 0) {
+		invincibilityTime_--;
+	}
 }
 
-void Player::Draw(const ViewProjection& viewProjection)
-{
+void Player::Draw(const ViewProjection& viewProjection) {
 	models_[kModelIndexBody]->Draw(worldTransformBody_, viewProjection);
 	models_[kModelIndexHead]->Draw(worldTransformHead_, viewProjection);
 	models_[kModelIndexL_arm]->Draw(worldTransformL_arm_, viewProjection);
@@ -165,11 +177,9 @@ void Player::Draw(const ViewProjection& viewProjection)
 	}
 }
 
-void Player::BehaviorRootUpdate()
-{
+void Player::BehaviorRootUpdate() {
 
 	Move();
-	UpdateFloatingGimmick();
 	UpdateArmGimmick();
 	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
@@ -181,9 +191,7 @@ void Player::BehaviorRootUpdate()
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 		if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_X) {
-
-			behaviorRequest_ = Behavior::kDash;
-
+			/*behaviorRequest_ = Behavior::kDash;*/
 		}
 		if (1) {
 			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_B) {
@@ -193,16 +201,14 @@ void Player::BehaviorRootUpdate()
 	}
 }
 
-void Player::BehaviorRootInitialize()
-{
+void Player::BehaviorRootInitialize() {
 	worldTransformL_arm_.rotation_ = {0.0f, 0.0f, 0.0f};
 	worldTransformR_arm_.rotation_ = {0.0f, 0.0f, 0.0f};
-
-
 }
 
-void Player::BehaviorAttackUpdate()
-{
+#pragma region コンボ
+
+void Player::BehaviorAttackUpdate() {
 #ifdef _DEBUG
 
 	ImGui::Begin("PlayerAttack");
@@ -220,7 +226,7 @@ void Player::BehaviorAttackUpdate()
 		Vector3 sub = lockOnPosition - worldTransform_.translation_;
 
 		float distance = sub.Lenght();
-		const float threshold = 1.0f; 
+		const float threshold = 1.0f;
 
 		if (distance > threshold) {
 			worldTransform_.rotation_.y = std::atan2(sub.x, sub.z);
@@ -282,15 +288,13 @@ void Player::BehaviorAttackUpdate()
 				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].chargeTime;
 			}
 		}
-		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime)) &&
-			(workAttack_.attackParameter_ > onePhaseTime)) {
+		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime)) && (workAttack_.attackParameter_ > onePhaseTime)) {
 
 			if (workAttack_.attackParameter_ == (onePhaseTime + twoPhaseTime)) {
 				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].swingTime;
 			}
 		}
-		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime + threePhaseTime)) &&
-			(workAttack_.attackParameter_ > (onePhaseTime + twoPhaseTime))) {
+		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime + threePhaseTime)) && (workAttack_.attackParameter_ > (onePhaseTime + twoPhaseTime))) {
 
 			worldTransformR_arm_.rotation_.x = LerpShortAngle(worldTransformR_arm_.rotation_.x, -1.36f, 0.3f);
 			worldTransformR_arm_.rotation_.y = LerpShortAngle(worldTransformR_arm_.rotation_.y, -0.533f, 0.3f);
@@ -318,29 +322,24 @@ void Player::BehaviorAttackUpdate()
 
 		if ((workAttack_.attackParameter_ <= onePhaseTime)) {
 
-
-
 			if (workAttack_.attackParameter_ == onePhaseTime) {
 				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].chargeTime;
 			}
 		}
-		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime)) &&
-			(workAttack_.attackParameter_ > onePhaseTime)) {
+		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime)) && (workAttack_.attackParameter_ > onePhaseTime)) {
 
 			if (workAttack_.attackParameter_ == (onePhaseTime + twoPhaseTime)) {
 				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].swingTime;
 			}
 		}
-		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime + threePhaseTime)) &&
-			(workAttack_.attackParameter_ > (onePhaseTime + twoPhaseTime))) {
+		if ((workAttack_.attackParameter_ <= (onePhaseTime + twoPhaseTime + threePhaseTime)) && (workAttack_.attackParameter_ > (onePhaseTime + twoPhaseTime))) {
 
 			if (worldTransformBody_.rotation_.y < 6.26573f) {
-				worldTransformBody_.rotation_.y += 0.3f; 
+				worldTransformBody_.rotation_.y += 0.3f;
 			}
 			if (worldTransformBody_.rotation_.y > 6.26573f) {
 				worldTransformBody_.rotation_.y = 6.26573f;
 			}
-			
 
 			if (workAttack_.attackParameter_ == (onePhaseTime + twoPhaseTime + threePhaseTime)) {
 				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].recoveryTime;
@@ -348,7 +347,6 @@ void Player::BehaviorAttackUpdate()
 		}
 		break;
 	}
-
 
 	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
@@ -359,7 +357,7 @@ void Player::BehaviorAttackUpdate()
 
 	XINPUT_STATE joyStatePre;
 	XINPUT_STATE joyState;
-	if (workAttack_.comboIndex < (ComboNum - 1) ) {
+	if (workAttack_.comboIndex < (ComboNum - 1)) {
 
 		if (Input::GetInstance()->GetJoystickState(0, joyState) && Input::GetInstance()->GetJoystickStatePrevious(0, joyStatePre)) {
 
@@ -369,10 +367,8 @@ void Player::BehaviorAttackUpdate()
 		}
 	}
 
-	totalTime = kConstAttacks_[workAttack_.comboIndex].anticipationTime +
-		kConstAttacks_[workAttack_.comboIndex].chargeTime +
-		kConstAttacks_[workAttack_.comboIndex].swingTime +
-		kConstAttacks_[workAttack_.comboIndex].recoveryTime;
+	totalTime = kConstAttacks_[workAttack_.comboIndex].anticipationTime + kConstAttacks_[workAttack_.comboIndex].chargeTime + kConstAttacks_[workAttack_.comboIndex].swingTime +
+	            kConstAttacks_[workAttack_.comboIndex].recoveryTime;
 	if (++workAttack_.attackParameter_ >= totalTime) {
 		if (workAttack_.comboNext) {
 			workAttack_.comboNext = false;
@@ -401,7 +397,6 @@ void Player::BehaviorAttackUpdate()
 					worldTransform_.rotation_.y = destinationAngleY_;
 				}
 			}
-			
 
 			switch (workAttack_.comboIndex) {
 			case 0:
@@ -431,11 +426,9 @@ void Player::BehaviorAttackUpdate()
 			worldTransformBody_.rotation_.y = 0.0f;
 		}
 	}
-
 }
 
-void Player::BehaviorAttackInitialize()
-{
+void Player::BehaviorAttackInitialize() {
 
 	worldTransformBody_.rotation_.y = 1.5708f;
 	worldTransformL_arm_.rotation_ = {-1.36f, 0.533f, 0.0f};
@@ -446,9 +439,9 @@ void Player::BehaviorAttackInitialize()
 	attackSpeed_ = 0.2f;
 	attackMove_ = {0.0f, 0.0f, attackSpeed_};
 }
+#pragma endregion
 
-void Player::BehaviorDashUpdate()
-{
+void Player::BehaviorDashUpdate() {
 
 	const float kCharacterSpeed = 1.5f;
 	Vector3 move = {0.0f, 0.0f, 1.0f};
@@ -466,30 +459,25 @@ void Player::BehaviorDashUpdate()
 
 	const uint32_t behaviorDashTime = 20;
 
-	if (++workDash_.dashParameter_ >= behaviorDashTime){
+	if (++workDash_.dashParameter_ >= behaviorDashTime) {
 		behaviorRequest_ = Behavior::kRoot;
 	}
-
 }
 
-void Player::BehaviorDashInitialize()
-{
+void Player::BehaviorDashInitialize() {
 
 	workDash_.dashParameter_ = 0;
 	worldTransform_.rotation_.y = destinationAngleY_;
-
 }
 
-void Player::BehaviorJumpUpdate()
-{
+void Player::BehaviorJumpUpdate() {
 
 	worldTransform_.translation_ += velocity_;
 	const float kGravityAcceleration = 0.05f;
 	Vector3 accelerationVector = {0.0f, -kGravityAcceleration, 0.0f};
 	velocity_ += accelerationVector;
 
-	if (worldTransform_.translation_.y <= 0.0f)
-	{
+	if (worldTransform_.translation_.y <= 0.0f) {
 		worldTransform_.translation_.y = 0.0f;
 		behaviorRequest_ = Behavior::kRoot;
 	}
@@ -500,11 +488,9 @@ void Player::BehaviorJumpUpdate()
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
 	hammer_->UpdateWorldTransform();
-
 }
 
-void Player::BehaviorJumpInitialize()
-{
+void Player::BehaviorJumpInitialize() {
 	worldTransform_.rotation_.y = destinationAngleY_;
 	worldTransformBody_.translation_.y = 0;
 	worldTransformL_arm_.rotation_.x = 0;
@@ -512,10 +498,9 @@ void Player::BehaviorJumpInitialize()
 	worldTransformR_arm_.rotation_.x = 0;
 	worldTransformR_arm_.rotation_.z = 0;
 
-	//ジャンプ初速度
+	// ジャンプ初速度
 	const float kJumpFirstSpeed = 0.75f;
 	velocity_.y = kJumpFirstSpeed;
-
 }
 
 void Player::BehaviorChargeUpdate() {
@@ -536,8 +521,6 @@ void Player::BehaviorChargeUpdate() {
 		behaviorRequest_ = Behavior::kRoot;
 		return;
 	}
-
-
 
 	XINPUT_STATE joyStatePre;
 	XINPUT_STATE joyState;
@@ -578,7 +561,6 @@ void Player::BehaviorChargeUpdate() {
 		snowBallPos.y += snowBalls_.back()->GetRadius();
 		snowBalls_.back()->SetTransform(snowBallPos);
 
-
 		Vector3 Differential = snowBallPos - oldpos;
 		Differential = Differential.Normalize();
 
@@ -599,9 +581,7 @@ void Player::BehaviorChargeUpdate() {
 
 			snowBalls_.back()->SetRotate(newRotate);
 		}
-		
 	}
-
 
 	BaseCharacter::Update();
 	worldTransformBody_.UpdateMatrix();
@@ -616,7 +596,6 @@ void Player::BehaviorChargeInitialize() {
 	worldTransformR_arm_.rotation_ = {-1.36f, -0.533f, 0.0f};
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
-
 
 	SnowBall* newSnowBall = new SnowBall();
 
@@ -653,9 +632,17 @@ void Player::Move() {
 		destinationAngleY_ = targetRotate;
 		if (ismoving) {
 			const float kCharacterSpeed = 0.3f;
+			weight = 1.0f;
 			if (snowBalls_.size() != 0 && !(snowBalls_.back()->IsRemove())) {
 				if (snowBalls_.back()->GetRadius() < 1.5f) {
 					weight = 1.0f;
+				}
+				if (snowBalls_.back()->GetRadius() >= 1.5f) {
+					float subNumber = 0.09f * snowBalls_.back()->GetRadius();
+					weight = weight - subNumber;
+				}
+				if (weight < 0.1f) {
+					weight = 0.1f;
 				}
 			}
 			velocity_ = velocity_.Normalize() * kCharacterSpeed * weight;
@@ -675,20 +662,18 @@ void Player::Move() {
 			Vector3 sub = lockOnPosition - worldTransform_.translation_;
 
 			worldTransform_.rotation_.y = std::atan2(sub.x, sub.z);
-
 		}
 	}
 }
 
-void Player::InitializeFloatingGimmick() {
-	floatingParameter_ = 0.0f;
-}
+void Player::InitializeFloatingGimmick() { floatingParameter_ = 0.0f; }
 
 void Player::UpdateFloatingGimmick() {
 	float mpi = 3.14159265f;
-	int valueCycle = static_cast<int>(cycle_);
 	const float step = 2.0f * mpi / cycle_;
 #ifdef _DEBUG
+
+	int valueCycle = static_cast<int>(cycle_);
 
 	ImGui::Begin("Player");
 	ImGui::SliderFloat3("Head Translation", &worldTransformHead_.translation_.x, 1.0f, 1.0f);
@@ -706,9 +691,7 @@ void Player::UpdateFloatingGimmick() {
 	worldTransformBody_.translation_.y = std::sin(floatingParameter_) * floatingAmplitude_;
 }
 
-void Player::InitializeArmGimmick() {
-	armParameter_ = 0.0f;
-}
+void Player::InitializeArmGimmick() { armParameter_ = 0.0f; }
 
 void Player::UpdateArmGimmick() {
 	float mpi = 3.14159265f;
@@ -724,8 +707,6 @@ void Player::UpdateArmGimmick() {
 	armParameter_ += step;
 	armParameter_ = std::fmod(armParameter_, 2.0f * mpi);
 
-	worldTransformL_arm_.rotation_.z = std::sin(armParameter_) * armAmplitude_;
-	worldTransformR_arm_.rotation_.z = -(std::sin(armParameter_) * armAmplitude_);
 	worldTransformL_arm_.rotation_.x = std::sin(armParameter_) * armAmplitude_;
 	worldTransformR_arm_.rotation_.x = std::sin(armParameter_) * armAmplitude_;
 }
@@ -733,32 +714,35 @@ void Player::UpdateArmGimmick() {
 void Player::OnCollision([[maybe_unused]] Collider* other) {
 
 	uint32_t typeID = other->GetTypeID();
-	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy)) {
-		behaviorTimer_ = -1;
-		workAttack_.attackParameter_ = 0;
-		workAttack_.comboIndex = 0;
-		workAttack_.inComboPhase = 0;
-		worldTransformBody_.rotation_.y = 0.0f;
+	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy) || typeID == static_cast<uint32_t>(CollisionTypeIdDef::kLittleEnemy)) {
 
-		if (behavior_ == Behavior::kAttack) {
-			if (!snowBalls_.size() == 0) {
-				if (!snowBalls_.back()->IsRemove()) {
-					snowBalls_.back()->SetRemove(true);
-					const float kBallSpeed = 2.0f;
-					Vector3 vel = {0.0f, 0.0f, 1.0f};
-					vel = vel.Normalize() * kBallSpeed;
-					Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
-					vel = TransformNormal(vel, rotatePlayer);
-					snowBalls_.back()->SetVelocity(vel);
+		if (invincibilityTime_ == 0) {
+			lifeCount_--;
+
+			if (lifeCount_ > 4) {
+				lifeCount_ = 0;
+			}
+
+			invincibilityTime_ = 50;
+
+			if (behavior_ == Behavior::kAttack) {
+				if (!snowBalls_.size() == 0) {
+					if (!snowBalls_.back()->IsRemove()) {
+						snowBalls_.back()->SetRemove(true);
+						const float kBallSpeed = 0.5f;
+						Vector3 vel = {0.0f, 0.0f, 1.0f};
+						vel = vel.Normalize() * kBallSpeed;
+						Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+						vel = TransformNormal(vel, rotatePlayer);
+						snowBalls_.back()->SetVelocity(vel);
+					}
 				}
 			}
 		}
 	}
 }
 
-void Player::SetLockOn(const LockOn* target) {
-	lockOn_ = target;
-}
+void Player::SetLockOn(const LockOn* target) { lockOn_ = target; }
 
 Vector3 Player::GetCenterPosition() const {
 
@@ -782,9 +766,9 @@ Hammer* Player::GetWeaponCollider() { return hammer_.get(); }
 
 std::list<SnowBall*> Player::GetBallCollider() { return snowBalls_; }
 
-bool Player::GetIsAttack() const { 
-	
-	if (behavior_==Behavior::kAttack) {
+bool Player::GetIsAttack() const {
+
+	if (behavior_ == Behavior::kAttack) {
 		return true;
 	}
 	return false;
@@ -798,11 +782,6 @@ void Player::ApplyGlobalVariables() {
 	worldTransformR_arm_.translation_ = globalVariables->GetVector3Value(groupName, "ArmR Translation");
 	cycle_ = uint16_t(globalVariables->GetIntValue(groupName, "floatingCycle"));
 	floatingAmplitude_ = globalVariables->GetFloatValue(groupName, "floatingAmplitude");
-
 }
 
-void Player::SetLittleEnemy(std::vector<Model*> model) {
-
-	littleModel_ = model;
-
-}
+void Player::SetLittleEnemy(std::vector<Model*> model) { littleModel_ = model; }

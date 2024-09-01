@@ -21,7 +21,7 @@ void EnemyAttackZone::Initialize(Model* model, const Vector3& position) {
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = position;
 
-	worldTransform_.rotation_.x = 1.5708f;
+	worldTransform_.rotation_.x = -1.5708f;
 
 	worldTransform_.UpdateMatrix();
 

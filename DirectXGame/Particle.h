@@ -25,6 +25,8 @@ public:
 
 	void SetSize(const float size);
 
+	void setDeath() { isDead_ = true; }
+
 private:
 
 	Model* model_ = nullptr;
