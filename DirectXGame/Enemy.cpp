@@ -3,6 +3,8 @@
 #include "MathCal.h"
 #include "CollisionTypeIdDef.h"
 #include "TextureManager.h"
+#include "Audio.h"
+#include "Effect.h"
 
 enum EnemyModelIndex {
 	kModelIndexBody = 0,
@@ -25,7 +27,6 @@ Enemy::~Enemy() {
 	for (LittleEnemy* littleEnemy : littleEnemys_) {
 		delete littleEnemy;
 	}
-
 	for (EnemyAttackZone* attackZone : attackZones_) {
 		delete attackZone;
 	}
@@ -60,7 +61,10 @@ void Enemy::Initialize(const std::vector<Model*>& models)
 	worldTransformR_arm_.translation_ = {0.734f, 1.565f, 0.0f};
 	worldTransformWeapon_.translation_ = {-0.9f, -0.66f, 0.0f};
 
+	worldTransform_.scale_ = {2.0f, 2.0f, 2.0f};
+
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kEnemy));
+	Collider::SetRadius(2.0f);
 
 	for (int i = 0; i < 8; i++) {
 		StandbyOperation* newstandby = new StandbyOperation();
@@ -79,6 +83,9 @@ void Enemy::Initialize(const std::vector<Model*>& models)
 	hpTexture_ = TextureManager::Load("white1x1.png");
 	hpSprite_ = Sprite::Create(hpTexture_, {320.0f, 50.0f}, {1.0f, 0.0f, 0.0f, 1.0f});
 	hpSprite_->SetSize({640.0f, 15.0f});
+
+	bigDamageSound_ = Audio::GetInstance()->LoadWave("bigDamage.mp3");
+	damageSound_ = Audio::GetInstance()->LoadWave("whip.mp3");
 
 }
 
@@ -108,6 +115,9 @@ void Enemy::SceneReset() {
 	oldPlayerPos_ = playerPos_;
 	occurrenceTime_ = 60;
 	occurrencesCount_ = 0;
+
+	endEnemy_ = false;
+	endTime_ = 0;
 
 }
 
@@ -151,6 +161,8 @@ void Enemy::Update()
 				worldTransformWeapon_.translation_ = {-0.9f, -0.66f, 0.0f};
 				worldTransformWeapon_.rotation_ = {0.0f, 0.0f, 0.0f};
 
+				worldTransformL_arm_.rotation_ = {-2.620f, 0.0f, -0.560f};
+				worldTransformWeapon_.rotation_ = {0.9f, -0.9f, 0.0f};
 				break;
 			case AttackType::kSummon:
 
@@ -204,9 +216,23 @@ void Enemy::Update()
 	//Move();
 	/*UpdatePartsGimmick();*/
 
+	Vector3 lockOnPosition = playerPos_;
+	Vector3 sub = lockOnPosition - worldTransform_.translation_;
+
+	worldTransform_.rotation_.y = std::atan2(sub.x, sub.z);
 
 
-	Attack();
+	if (endTime_ == 0) {
+		Attack();
+	} else {
+		endTime_--;
+		if (endTime_ % 10 == 0) {
+			Effect::GetInstance()->CreateEnemyDeth(worldTransform_.translation_);
+		}
+		if (endTime_ == 0) {
+			endEnemy_ = true;
+		}
+	}
 
 	for (LittleEnemy* littleEnemy : littleEnemys_) {
 		littleEnemy->Update();
@@ -322,7 +348,7 @@ void Enemy::Attack() {
 				isStandby_ = false;
 				attackTypeRequest_ = AttackType::kDush;
 				occurrencesCount_ = 0;
-				occurrenceTime_ = 30;
+				occurrenceTime_ = 80;
 				attackCooltime_ = 300;
 			} else {
 				isStandby_ = true;
@@ -348,7 +374,7 @@ void Enemy::Attack() {
 			break;
 		case AttackType::kDush:
 
-			if (occurrenceTime_ == 30) {
+			if (occurrenceTime_ == 40) {
 				oldPlayerPos_ = playerPos_;
 				oldPlayerPos_.y = 0.0f;
 				Vector3 sub = oldPlayerPos_ - worldTransform_.translation_;
@@ -366,8 +392,14 @@ void Enemy::Attack() {
 					occurrencesCount_++;
 					occurrenceTime_ = 50;
 				}
+				worldTransform_.scale_ = {2.0f, 2.0f, 2.0f};
 			} else {
 				occurrenceTime_--;
+
+				float frequency = 0.3f;
+				float a = (sin(occurrenceTime_ * frequency)) / 2.0f;
+				worldTransform_.scale_ = {2.0f - a, 2.0f - a, 2.0f - a};
+				
 			}
 
 			if (occurrencesCount_ == 2) {
@@ -446,6 +478,8 @@ void Enemy::OnCollision([[maybe_unused]] Collider* other) {
 				newSize = 0.0f;
 			}
 			hpSprite_->SetSize({newSize, 15.0f});
+			Audio::GetInstance()->PlayWave(damageSound_, false, 0.05f);
+
 
 		} else {
 			lifeCount_ -= static_cast<int>(other->GetRadius() * 5.0f) * 4;
@@ -459,7 +493,16 @@ void Enemy::OnCollision([[maybe_unused]] Collider* other) {
 				newSize = 0.0f;
 			}
 			hpSprite_->SetSize({newSize, 15.0f});
+			Audio::GetInstance()->PlayWave(bigDamageSound_, false, 0.3f);
+
 		}
+	}
+
+	if (lifeCount_ == 0) {
+	
+		endTime_ = 120;
+		endEnemy_ = false;
+
 	}
 
 }

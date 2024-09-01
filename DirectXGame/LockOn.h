@@ -18,6 +18,8 @@ public:
 	/// </summary>
 	void Initialize();
 
+	void SceneReset();
+
 	/// <summary>
 	/// 更新
 	/// </summary>

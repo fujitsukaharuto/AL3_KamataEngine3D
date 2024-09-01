@@ -6,7 +6,14 @@
 
 GameScene::GameScene() {}
 
-GameScene::~GameScene() {}
+GameScene::~GameScene() {
+
+	delete titleSrite_;
+	delete blackSrite_;
+	delete gameClearSrite_;
+	delete gameOverSrite_;
+
+}
 
 void GameScene::Initialize() {
 
@@ -71,9 +78,32 @@ void GameScene::Initialize() {
 
 	ground_ = std::make_unique<Ground>();
 	ground_->Initialize(groundModel_.get());
+
+
+	sceneTypeRequest_ = SceneType::title;
+
+	titleHandle_ = TextureManager::Load("title.png");
+	titleSrite_ = Sprite::Create(titleHandle_, {0.0f, 0.0f});
+
+	blackHandle_ = TextureManager::Load("white1x1.png");
+	blackSrite_ = Sprite::Create(blackHandle_, {-2560.0f, 0.0f});
+	blackSrite_->SetColor({0.0f, 0.0f, 0.0f, 1.0f});
+	blackSrite_->SetSize({2560.0f, 720.0f});
+
+	gameClearHandle_ = TextureManager::Load("gameclear.png");
+	gameClearSrite_ = Sprite::Create(gameClearHandle_, {0.0f, 0.0f});
+
+	gameOverHandle_ = TextureManager::Load("gameover.png");
+	gameOverSrite_ = Sprite::Create(gameOverHandle_, {0.0f, 0.0f});
+
+
+	AButtonSound_ = audio_->LoadWave("ASound.mp3");
+
 }
 
 void GameScene::Update() {
+
+	BlackMove();
 
 	if (sceneTypeRequest_) {
 		sceneType_ = sceneTypeRequest_.value();
@@ -86,6 +116,7 @@ void GameScene::Update() {
 			effect_->SceneReset();
 			collisionManager_->Reset();
 			followCamera_->Reset();
+			lockOn_->SceneReset();
 
 			isClear_ = false;
 			isGameover_ = false;
@@ -124,8 +155,12 @@ void GameScene::Update() {
 
 		if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
-				sceneChangeTimer_ = 40;
-				isSceneChange_ = true;
+				if (stiffnessTimer_ == 0) {
+					sceneChangeTimer_ = 40;
+					stiffnessTimer_ = 60;
+					isSceneChange_ = true;
+					audio_->PlayWave(AButtonSound_, false, 0.2f);
+				}
 			}
 		}
 		if (isSceneChange_) {
@@ -135,15 +170,35 @@ void GameScene::Update() {
 				sceneTypeRequest_ = SceneType::tutorial;
 				isSceneChange_ = false;
 			}
+		} else {
+		
+			followCamera_->Update();
+
+		}
+
+		if (isDebugCameraMode_) {
+			debugCamera_->Update();
+			viewProject_.matView = debugCamera_->GetViewProjection().matView;
+			viewProject_.matProjection = debugCamera_->GetViewProjection().matProjection;
+			viewProject_.TransferMatrix();
+		} else {
+			viewProject_.UpdateMatrix();
+			viewProject_.matView = followCamera_->GetViewProjection().matView;
+			viewProject_.matProjection = followCamera_->GetViewProjection().matProjection;
+			viewProject_.TransferMatrix();
 		}
 
 		break;
 	case SceneType::tutorial:
 
 		if (Input::GetInstance()->GetJoystickState(0, joyState)) {
-			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_START) {
-				sceneChangeTimer_ = 40;
-				isSceneChange_ = true;
+			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_Y) {
+				if (stiffnessTimer_ == 0) {
+					sceneChangeTimer_ = 40;
+					stiffnessTimer_ = 60;
+					isSceneChange_ = true;
+					audio_->PlayWave(AButtonSound_, false, 0.2f);
+				}
 			}
 		}
 		if (isSceneChange_) {
@@ -177,63 +232,6 @@ void GameScene::Update() {
 		break;
 	case SceneType::game:
 
-#pragma region Game
-
-		player_->Update();
-
-		followCamera_->Update();
-
-		Vector3 littleEnemyTarget = player_->GetCenterPosisionOrigine();
-		for (std::unique_ptr<Enemy>& enemy : enemies_) {
-			enemy->Update();
-			enemy->SetLittleEnemyTarget(littleEnemyTarget);
-			if (Input::GetInstance()->TriggerKey(DIK_DELETE)) {
-				enemy->SettingLittles();
-			}
-		}
-
-		lockOn_->Update(enemies_, viewProject_);
-
-		CheckAllCollisions();
-		collisionManager_->UpdateWorldTransform();
-
-#ifdef _DEBUG
-
-		if (input_->TriggerKey(DIK_F12)) {
-			if (isDebugCameraMode_) {
-				isDebugCameraMode_ = false;
-			} else {
-				isDebugCameraMode_ = true;
-			}
-		}
-
-#endif // _DEBUG
-
-		effect_->Update();
-
-		if (isDebugCameraMode_) {
-			debugCamera_->Update();
-			viewProject_.matView = debugCamera_->GetViewProjection().matView;
-			viewProject_.matProjection = debugCamera_->GetViewProjection().matProjection;
-			viewProject_.TransferMatrix();
-		} else {
-			viewProject_.UpdateMatrix();
-			viewProject_.matView = followCamera_->GetViewProjection().matView;
-			viewProject_.matProjection = followCamera_->GetViewProjection().matProjection;
-			viewProject_.TransferMatrix();
-		}
-
-		if (player_->GetLifeCount() == 0) {
-			isSceneChange_ = true;
-			isGameover_ = true;
-		}
-		for (std::unique_ptr<Enemy>& enemy : enemies_) {
-			if (enemy->GetLifeCount() == 0) {
-				isSceneChange_ = true;
-				isClear_ = true;
-			}
-		}
-
 		if (isSceneChange_) {
 			if (sceneChangeTimer_ > 0) {
 				sceneChangeTimer_--;
@@ -246,17 +244,83 @@ void GameScene::Update() {
 					isSceneChange_ = false;
 				}
 			}
-		}
+		} else {
+
+#pragma region Game
+
+			player_->Update();
+
+			followCamera_->Update();
+
+			Vector3 littleEnemyTarget = player_->GetCenterPosisionOrigine();
+			for (std::unique_ptr<Enemy>& enemy : enemies_) {
+				enemy->Update();
+				enemy->SetLittleEnemyTarget(littleEnemyTarget);
+				if (Input::GetInstance()->TriggerKey(DIK_DELETE)) {
+					enemy->SettingLittles();
+				}
+			}
+
+			lockOn_->Update(enemies_, viewProject_);
+
+			CheckAllCollisions();
+			collisionManager_->UpdateWorldTransform();
+
+#ifdef _DEBUG
+
+			if (input_->TriggerKey(DIK_F12)) {
+				if (isDebugCameraMode_) {
+					isDebugCameraMode_ = false;
+				} else {
+					isDebugCameraMode_ = true;
+				}
+			}
+
+#endif // _DEBUG
+
+			effect_->Update();
+
+			if (isDebugCameraMode_) {
+				debugCamera_->Update();
+				viewProject_.matView = debugCamera_->GetViewProjection().matView;
+				viewProject_.matProjection = debugCamera_->GetViewProjection().matProjection;
+				viewProject_.TransferMatrix();
+			} else {
+				viewProject_.UpdateMatrix();
+				viewProject_.matView = followCamera_->GetViewProjection().matView;
+				viewProject_.matProjection = followCamera_->GetViewProjection().matProjection;
+				viewProject_.TransferMatrix();
+			}
+
+			if (player_->GetLifeCount() == 0 && player_->IsEndPlayer()) {
+				isSceneChange_ = true;
+				isGameover_ = true;
+				sceneChangeTimer_ = 40;
+				stiffnessTimer_ = 60;
+			}
+			for (std::unique_ptr<Enemy>& enemy : enemies_) {
+				if (enemy->GetLifeCount() == 0 && enemy->IsEndEnemy()) {
+					isSceneChange_ = true;
+					isClear_ = true;
+					sceneChangeTimer_ = 40;
+					stiffnessTimer_ = 60;
+				}
+			}
 
 #pragma endregion
 
+		}
 		break;
 	case SceneType::gameClear:
 
 		if ((Input::GetInstance()->GetJoystickState(0, joyState))&&(Input::GetInstance()->GetJoystickStatePrevious(0,joyStatePre))) {
 			if ((joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) && !(joyStatePre.Gamepad.wButtons & XINPUT_GAMEPAD_A)) {
-				sceneChangeTimer_ = 40;
-				isSceneChange_ = true;
+				if (stiffnessTimer_ == 0) {
+					sceneChangeTimer_ = 40;
+					stiffnessTimer_ = 60;
+					isSceneChange_ = true;
+					audio_->PlayWave(AButtonSound_, false, 0.2f);
+				}
 			}
 		}
 		if (isSceneChange_) {
@@ -273,8 +337,12 @@ void GameScene::Update() {
 
 		if ((Input::GetInstance()->GetJoystickState(0, joyState)) && (Input::GetInstance()->GetJoystickStatePrevious(0, joyStatePre))) {
 			if ((joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) && !(joyStatePre.Gamepad.wButtons & XINPUT_GAMEPAD_A)) {
-				sceneChangeTimer_ = 40;
-				isSceneChange_ = true;
+				if (stiffnessTimer_ == 0) {
+					sceneChangeTimer_ = 40;
+					stiffnessTimer_ = 60;
+					isSceneChange_ = true;
+					audio_->PlayWave(AButtonSound_, false, 0.2f);
+				}
 			}
 		}
 		if (isSceneChange_) {
@@ -319,6 +387,10 @@ void GameScene::Draw() {
 
 	switch (sceneType_) {
 	case SceneType::title:
+
+		skydome_->Draw(viewProject_);
+		ground_->Draw(viewProject_);
+
 		break;
 	case SceneType::tutorial:
 
@@ -342,8 +414,14 @@ void GameScene::Draw() {
 
 		break;
 	case SceneType::gameClear:
+
+
+
 		break;
 	case SceneType::gameOver:
+
+
+
 		break;
 	}
 
@@ -361,21 +439,41 @@ void GameScene::Draw() {
 
 	switch (sceneType_) {
 	case SceneType::title:
+
+		titleSrite_->Draw();
+		blackSrite_->Draw();
+
 		break;
 	case SceneType::tutorial:
+
+		player_->DrawTutolialSprite();
+		blackSrite_->Draw();
+
 		break;
 	case SceneType::game:
 
-			lockOn_->Draw();
+		lockOn_->Draw();
 
 		for (std::unique_ptr<Enemy>& enemy : enemies_) {
 			enemy->DrawSprite();
 		}
 
+		player_->DrawSprite();
+
+		blackSrite_->Draw();
+
 		break;
 	case SceneType::gameClear:
+		
+		gameClearSrite_->Draw();
+		blackSrite_->Draw();
+
 		break;
 	case SceneType::gameOver:
+
+		gameOverSrite_->Draw();
+		blackSrite_->Draw();
+
 		break;
 	}
 
@@ -391,7 +489,7 @@ void GameScene::CheckAllCollisions() {
 
 	collisionManager_->AddCollider(player_.get());
 	if (player_->GetIsAttack()) {
-		collisionManager_->AddCollider(player_->GetWeaponCollider());
+		/*collisionManager_->AddCollider(player_->GetWeaponCollider());*/
 	}
 	for (auto& i : player_->GetBallCollider()) {
 		collisionManager_->AddCollider(i);
@@ -403,7 +501,22 @@ void GameScene::CheckAllCollisions() {
 		for (auto& i : enemy->GetLittleEnemyCollider()) {
 			collisionManager_->AddCollider(i);
 		}
+		for (auto& i : enemy->GetAttackZoneCollider()) {
+			collisionManager_->AddCollider(i);
+		}
 	}
 
 	collisionManager_->CheckAllCollisions();
+}
+
+void GameScene::BlackMove() {
+	if (stiffnessTimer_ > 0) {
+		float move = blackSrite_->GetPosition().x + 64.0f;
+		blackSrite_->SetPosition({move, 0.0f});
+
+		stiffnessTimer_--;
+
+	} else {
+		blackSrite_->SetPosition({-2560.0f, 0.0f});
+	}
 }

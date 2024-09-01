@@ -2,6 +2,7 @@
 #include "MathCal.h"
 #include "LittleEnemy.h"
 #include "ImGuiManager.h"
+#include "Effect.h"
 #include <cassert>
 
 SnowBall::SnowBall() {}
@@ -29,6 +30,10 @@ void SnowBall::Initialize(Model* model, const Vector3& position) {
 	Collider::Initialize();
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kSnowBall));
 	Collider::SetRadius(sizeRadius_);
+
+	color_.Initialize();
+	color_.SetColor({0.580f, 0.518f, 0.416f, 1.0f});
+	color_.TransferMatrix();
 }
 
 void SnowBall::Update() {
@@ -102,7 +107,7 @@ void SnowBall::Update() {
 
 void SnowBall::Draw(const ViewProjection& viewProjection) {
 
-	model_->Draw(worldTransform_, viewProjection);
+	model_->Draw(worldTransform_, viewProjection, &color_);
 	for (LittleEnemy* littleE : littleEnemys_) {
 
 		littleE->Draw(viewProjection);
@@ -131,6 +136,9 @@ void SnowBall::OnCollision(Collider* other) {
 	// 衝突相手が敵なら
 	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy)) {
 		isDead_ = true;
+
+		Effect::GetInstance()->CreateSnowBallDeth(worldTransform_.translation_);
+
 	}
 	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kLittleEnemy)) {
 		littleEnemyCount_++;
@@ -153,6 +161,7 @@ void SnowBall::OnCollision(Collider* other) {
 		Vector3 invrad = TransformNormal({0.0f, -1.0f, 0.0f}, invRotate);
 		newLittle->SetRotate(invrad);
 		newLittle->SetPosition(invrad);
+		newLittle->SetBodyPosition({0.0f, -0.1f, 0.0f});
 		newLittle->Setparent(worldTransform_);
 		newLittle->SetSclae(newLittle->GetOrigineScale() / sizeRadius_);
 		newLittle->Update();

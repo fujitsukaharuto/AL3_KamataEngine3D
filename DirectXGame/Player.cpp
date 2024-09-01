@@ -6,6 +6,8 @@
 #include "Input.h"
 #include "LockOn.h"
 #include "MathCal.h"
+#include "TextureManager.h"
+#include "Audio.h"
 
 #include <cassert>
 #include <cmath>
@@ -36,14 +38,23 @@ Player::~Player() {
 	for (SnowBall* ball : snowBalls_) {
 		delete ball;
 	}
+
+	delete AbuttonSprite_;
+	delete StickSprite_;
+	delete RBButtonSprite_;
+	delete YButtonSprite_;
+	for (uint32_t i = 0; i < 4; i++) {
+		delete hpSprite_[i];
+	}
+
 }
 
 void Player::Initialize(const std::vector<Model*>& models) {
 
 	BaseCharacter::Initialize(models);
-	hammer_ = std::make_unique<Hammer>();
+	/*hammer_ = std::make_unique<Hammer>();
 	hammer_->Initialize(models_[kModelIndexWeapon]);
-	hammer_->UpdateWorldTransform();
+	hammer_->UpdateWorldTransform();*/
 
 	GlobalVariables* globalvariables = GlobalVariables::GetInstance();
 	const char* groupName = "Player";
@@ -61,7 +72,7 @@ void Player::Initialize(const std::vector<Model*>& models) {
 	worldTransformHead_.parent_ = &worldTransformBody_;
 	worldTransformL_arm_.parent_ = &worldTransformBody_;
 	worldTransformR_arm_.parent_ = &worldTransformBody_;
-	hammer_->SetParent(worldTransformBody_);
+	/*hammer_->SetParent(worldTransformBody_);*/
 
 	/*worldTransformHead_.translation_ = {0.0f, 1.65f, 0.0f};
 	worldTransformL_arm_.translation_ = {-0.59f, 1.65f, 0.0f};
@@ -81,7 +92,25 @@ void Player::Initialize(const std::vector<Model*>& models) {
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
-	hammer_->UpdateWorldTransform();
+	/*hammer_->UpdateWorldTransform();*/
+
+	AbuttonHandle_ = TextureManager::Load("AButton.png");
+	StickHandle_ = TextureManager::Load("Stick.png");
+	RBButtonHandle_ = TextureManager::Load("Contollor.png");
+	YButtonHandle_ = TextureManager::Load("tutolialEnd.png");
+	hpHandle_ = TextureManager::Load("hp.png");
+
+	AbuttonSprite_ = Sprite::Create(AbuttonHandle_, {200.0f, 90.0f});
+	StickSprite_ = Sprite::Create(StickHandle_, {700.0f, 90.0f});
+	RBButtonSprite_ = Sprite::Create(RBButtonHandle_, {950.0f, 550.0f});
+	YButtonSprite_ = Sprite::Create(YButtonHandle_, {950.f, 620.0f});
+	for (uint32_t i = 0; i < lifeCount_; i++) {
+		hpSprite_[i] = Sprite::Create(hpHandle_, {50.0f + static_cast<float>(80 * i), 620});
+	}
+
+
+	DamageSound_ = Audio::GetInstance()->LoadWave("damaged1.mp3");
+
 }
 
 void Player::SceneReset() {
@@ -96,6 +125,9 @@ void Player::SceneReset() {
 
 	lifeCount_ = 4;
 	invincibilityTime_ = 0;
+
+	endPlayer_ = false;
+	endTime_ = 0;
 
 }
 
@@ -129,20 +161,31 @@ void Player::Update() {
 		}
 		behaviorRequest_ = std::nullopt;
 	}
-	switch (behavior_) {
-	case Behavior::kRoot:
-	default:
-		BehaviorRootUpdate();
-		break;
-	case Behavior::kAttack:
-		BehaviorChargeUpdate();
-		break;
-	case Behavior::kDash:
-		BehaviorDashUpdate();
-		break;
-	case Behavior::kJump:
-		BehaviorJumpUpdate();
-		break;
+
+	if (endTime_ == 0) {
+		switch (behavior_) {
+		case Behavior::kRoot:
+		default:
+			BehaviorRootUpdate();
+			break;
+		case Behavior::kAttack:
+			BehaviorChargeUpdate();
+			break;
+		case Behavior::kDash:
+			BehaviorDashUpdate();
+			break;
+		case Behavior::kJump:
+			BehaviorJumpUpdate();
+			break;
+		}
+	} else {
+		endTime_--;
+		if (endTime_ % 10 == 0) {
+			Effect::GetInstance()->CreateEnemyDeth(worldTransform_.translation_);
+		}
+		if (endTime_ == 0) {
+			endPlayer_ = true;
+		}
 	}
 
 	XINPUT_STATE joyState;
@@ -164,7 +207,23 @@ void Player::Update() {
 
 	if (invincibilityTime_ > 0) {
 		invincibilityTime_--;
+
+		float frequency = 0.3f;
+		float alpha = (sin(static_cast<float>(invincibilityTime_) * frequency) + 1.0f) / 2.0f;
+		models_[kModelIndexBody]->SetAlpha(alpha);
+		models_[kModelIndexHead]->SetAlpha(alpha);
+		models_[kModelIndexL_arm]->SetAlpha(alpha);
+		models_[kModelIndexR_arm]->SetAlpha(alpha);
+	} else {
+	
+		float alpha = 1.0f;
+
+		models_[kModelIndexBody]->SetAlpha(alpha);
+		models_[kModelIndexHead]->SetAlpha(alpha);
+		models_[kModelIndexL_arm]->SetAlpha(alpha);
+		models_[kModelIndexR_arm]->SetAlpha(alpha);
 	}
+
 }
 
 void Player::Draw(const ViewProjection& viewProjection) {
@@ -177,6 +236,22 @@ void Player::Draw(const ViewProjection& viewProjection) {
 	}
 }
 
+void Player::DrawSprite() {
+
+	RBButtonSprite_->Draw();
+
+	for (uint32_t i = 0; i < lifeCount_; i++) {
+		hpSprite_[i]->Draw();
+	}
+}
+
+void Player::DrawTutolialSprite() {
+
+	AbuttonSprite_->Draw();
+	StickSprite_->Draw();
+	YButtonSprite_->Draw();
+}
+
 void Player::BehaviorRootUpdate() {
 
 	Move();
@@ -186,7 +261,7 @@ void Player::BehaviorRootUpdate() {
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
-	hammer_->UpdateWorldTransform();
+	/*hammer_->UpdateWorldTransform();*/
 
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
@@ -283,7 +358,7 @@ void Player::BehaviorAttackUpdate() {
 			worldTransformL_arm_.rotation_.y = LerpShortAngle(worldTransformL_arm_.rotation_.y, 0.0f, 0.3f);
 			worldTransformL_arm_.rotation_.z = LerpShortAngle(worldTransformL_arm_.rotation_.z, -0.416f, 0.3f);
 
-			hammer_->SetRotaion({LerpShortAngle(hammer_->GetRotation().x, -0.2f, 0.3f), 0.0f, 0.0f});
+			/*hammer_->SetRotaion({LerpShortAngle(hammer_->GetRotation().x, -0.2f, 0.3f), 0.0f, 0.0f});*/
 			if (workAttack_.attackParameter_ == onePhaseTime) {
 				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].chargeTime;
 			}
@@ -304,7 +379,7 @@ void Player::BehaviorAttackUpdate() {
 			worldTransformL_arm_.rotation_.y = LerpShortAngle(worldTransformL_arm_.rotation_.y, 0.533f, 0.3f);
 			worldTransformL_arm_.rotation_.z = LerpShortAngle(worldTransformL_arm_.rotation_.z, 0.0f, 0.3f);
 
-			hammer_->SetRotaion({LerpShortAngle(hammer_->GetRotation().x, 1.5f, 0.3f), 0.0f, 0.0f});
+			/*hammer_->SetRotaion({LerpShortAngle(hammer_->GetRotation().x, 1.5f, 0.3f), 0.0f, 0.0f});*/
 			if (workAttack_.attackParameter_ == (onePhaseTime + twoPhaseTime + threePhaseTime)) {
 				workAttack_.inComboPhase += kConstAttacks_[workAttack_.comboIndex].recoveryTime;
 			}
@@ -353,7 +428,7 @@ void Player::BehaviorAttackUpdate() {
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
-	hammer_->UpdateWorldTransform();
+	/*hammer_->UpdateWorldTransform();*/
 
 	XINPUT_STATE joyStatePre;
 	XINPUT_STATE joyState;
@@ -402,8 +477,8 @@ void Player::BehaviorAttackUpdate() {
 			case 0:
 				/*worldTransformL_arm_.rotation_ = {-3.36f, 0.0f, -0.416f};
 				worldTransformR_arm_.rotation_ = {-3.36f, 0.0f, 0.416f};*/
-				hammer_->SetRotaion({hammer_->GetRotation().x, 0.0f, 1.5708f});
-				hammer_->DeletionContactHistory();
+				/*hammer_->SetRotaion({hammer_->GetRotation().x, 0.0f, 1.5708f});*/
+				/*hammer_->DeletionContactHistory();*/
 				attackSpeed_ = 0.2f;
 				attackMove_ = {0.0f, 0.0f, attackSpeed_};
 				workAttack_.comboIndex++;
@@ -411,7 +486,7 @@ void Player::BehaviorAttackUpdate() {
 			case 1:
 			default:
 				worldTransformBody_.rotation_.y = 0.0f;
-				hammer_->DeletionContactHistory();
+				/*hammer_->DeletionContactHistory();*/
 				attackSpeed_ = 0.2f;
 				attackMove_ = {0.0f, 0.0f, attackSpeed_};
 				workAttack_.comboIndex++;
@@ -433,8 +508,8 @@ void Player::BehaviorAttackInitialize() {
 	worldTransformBody_.rotation_.y = 1.5708f;
 	worldTransformL_arm_.rotation_ = {-1.36f, 0.533f, 0.0f};
 	worldTransformR_arm_.rotation_ = {-1.36f, -0.533f, 0.0f};
-	hammer_->SetRotaion({1.5f, 0.0f, 1.5708f});
-	hammer_->DeletionContactHistory();
+	/*hammer_->SetRotaion({1.5f, 0.0f, 1.5708f});
+	hammer_->DeletionContactHistory();*/
 	workAttack_.inComboPhase = 2;
 	attackSpeed_ = 0.2f;
 	attackMove_ = {0.0f, 0.0f, attackSpeed_};
@@ -455,7 +530,7 @@ void Player::BehaviorDashUpdate() {
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
-	hammer_->UpdateWorldTransform();
+	/*hammer_->UpdateWorldTransform();*/
 
 	const uint32_t behaviorDashTime = 20;
 
@@ -487,7 +562,7 @@ void Player::BehaviorJumpUpdate() {
 	worldTransformHead_.UpdateMatrix();
 	worldTransformL_arm_.UpdateMatrix();
 	worldTransformR_arm_.UpdateMatrix();
-	hammer_->UpdateWorldTransform();
+	/*hammer_->UpdateWorldTransform();*/
 }
 
 void Player::BehaviorJumpInitialize() {
@@ -713,33 +788,44 @@ void Player::UpdateArmGimmick() {
 
 void Player::OnCollision([[maybe_unused]] Collider* other) {
 
-	uint32_t typeID = other->GetTypeID();
-	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy) || typeID == static_cast<uint32_t>(CollisionTypeIdDef::kLittleEnemy)) {
+	if (lifeCount_ > 0) {
 
-		if (invincibilityTime_ == 0) {
-			lifeCount_--;
+		uint32_t typeID = other->GetTypeID();
+		if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kEnemy) || typeID == static_cast<uint32_t>(CollisionTypeIdDef::kLittleEnemy)) {
 
-			if (lifeCount_ > 4) {
-				lifeCount_ = 0;
-			}
+			if (invincibilityTime_ == 0 && lifeCount_ > 0) {
+				lifeCount_--;
+				Audio::GetInstance()->PlayWave(DamageSound_, false, 0.3f);
+				if (lifeCount_ > 4) {
+					lifeCount_ = 0;
+				}
 
-			invincibilityTime_ = 50;
+				invincibilityTime_ = 50;
 
-			if (behavior_ == Behavior::kAttack) {
-				if (!snowBalls_.size() == 0) {
-					if (!snowBalls_.back()->IsRemove()) {
-						snowBalls_.back()->SetRemove(true);
-						const float kBallSpeed = 0.5f;
-						Vector3 vel = {0.0f, 0.0f, 1.0f};
-						vel = vel.Normalize() * kBallSpeed;
-						Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
-						vel = TransformNormal(vel, rotatePlayer);
-						snowBalls_.back()->SetVelocity(vel);
+				if (behavior_ == Behavior::kAttack) {
+					if (!snowBalls_.size() == 0) {
+						if (!snowBalls_.back()->IsRemove()) {
+							snowBalls_.back()->SetRemove(true);
+							const float kBallSpeed = 0.5f;
+							Vector3 vel = {0.0f, 0.0f, 1.0f};
+							vel = vel.Normalize() * kBallSpeed;
+							Matrix4x4 rotatePlayer = MakeRotateXYZMatrix(worldTransform_.rotation_);
+							vel = TransformNormal(vel, rotatePlayer);
+							snowBalls_.back()->SetVelocity(vel);
+						}
 					}
 				}
 			}
 		}
+
+		if (lifeCount_ == 0) {
+
+			endPlayer_ = false;
+			endTime_ = 120;
+		}
+
 	}
+
 }
 
 void Player::SetLockOn(const LockOn* target) { lockOn_ = target; }
@@ -762,7 +848,7 @@ Vector3 Player::GetCenterPosisionOrigine() const {
 	return worldPos;
 }
 
-Hammer* Player::GetWeaponCollider() { return hammer_.get(); }
+//Hammer* Player::GetWeaponCollider() { return hammer_.get(); }
 
 std::list<SnowBall*> Player::GetBallCollider() { return snowBalls_; }
 

@@ -6,6 +6,7 @@
 #include "BaseCharacter.h"
 #include "Hammer.h"
 #include "SnowBall.h"
+#include "Sprite.h"
 
 
 class LockOn;
@@ -79,6 +80,9 @@ public:
 	/// <param name="viewProjection">ビュープロジェクション（参照渡し）</param>
 	void Draw(const ViewProjection& viewProjection) override;
 	
+	void DrawSprite();
+
+	void DrawTutolialSprite();
 
 	// Function
 
@@ -144,7 +148,7 @@ public:
 
 	Vector3 GetCenterPosisionOrigine() const;
 
-	Hammer* GetWeaponCollider();
+	/*Hammer* GetWeaponCollider();*/
 
 	std::list<SnowBall*> GetBallCollider();
 
@@ -157,11 +161,13 @@ public:
 
 	void SetLittleEnemy(std::vector<Model*> model);
 
+	bool IsEndPlayer() { return endPlayer_; }
+
 private:
 
 	const ViewProjection* viewProjection_ = nullptr;
 
-	std::unique_ptr<Hammer> hammer_ = nullptr;
+	/*std::unique_ptr<Hammer> hammer_ = nullptr;*/
 
 	WorldTransform worldTransformBody_;
 	WorldTransform worldTransformHead_;
@@ -199,9 +205,28 @@ private:
 
 	std::vector<Model*> littleModel_;
 
-
-
 	uint32_t lifeCount_ = 4;
 	uint32_t invincibilityTime_ = 0;
+	bool endPlayer_ = false;
+	uint32_t endTime_ = 0;
+
+
+	uint32_t AbuttonHandle_ = 0;
+	Sprite* AbuttonSprite_;
+
+	uint32_t StickHandle_ = 0;
+	Sprite* StickSprite_;
+
+	uint32_t RBButtonHandle_ = 0;
+	Sprite* RBButtonSprite_;
+
+	uint32_t YButtonHandle_ = 0;
+	Sprite* YButtonSprite_;
+
+	uint32_t hpHandle_ = 0;
+	Sprite* hpSprite_[4];
+
+
+	uint32_t DamageSound_ = 0;
 
 };

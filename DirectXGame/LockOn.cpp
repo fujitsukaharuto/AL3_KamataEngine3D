@@ -14,6 +14,12 @@ void LockOn::Initialize() {
 	lockOnMark_->SetAnchorPoint({0.5f, 0.5f});
 }
 
+void LockOn::SceneReset() {
+
+	target_ = nullptr;
+
+}
+
 void LockOn::Update(const std::list<std::unique_ptr<Enemy>>& enemies, const ViewProjection& viewProjection) {
 
 	XINPUT_STATE joyState;

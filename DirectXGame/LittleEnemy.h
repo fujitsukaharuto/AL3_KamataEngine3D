@@ -48,6 +48,8 @@ public:
 
 	void SetPosition(const Vector3& pos);
 
+	void SetBodyPosition(const Vector3& pos);
+
 	void SetTargetPosision(const Vector3& target);
 
 	bool IsDead() const { return isDead_; }
@@ -60,7 +62,6 @@ private:
 
 	Vector3 targetPosition_;
 
-	SnowBall* snowball_;
 	bool isGetCaughtUp_ = false;
 	bool isDead_ = false;
 

@@ -49,12 +49,13 @@ private:
 
 	Model* model_ = nullptr;
 	WorldTransform worldTransform_;
+	ObjectColor color_;
 
 	Vector3 velocity_;
 	int32_t deathTimer_ = 120;
 
 	float sizeRadius_ = 0.5f;
-	float addRadius_ = 0.5f;
+	float addRadius_ = 0.25f;
 
 	bool isRemove_ = false;
 	bool isDead_ = false;

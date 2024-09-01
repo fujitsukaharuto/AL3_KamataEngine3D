@@ -24,6 +24,11 @@ public:
 
 	void CreateWalk(const Vector3& postion);
 
+	void CreateEnemyDeth(const Vector3& position);
+
+	void CreateSnowBallDeth(const Vector3& position);
+
+
 private:
 
 	Model* model_ = nullptr;

@@ -17,7 +17,7 @@ void LittleEnemy::Initialize(const std::vector<Model*>& models) {
 
 	worldTransform_.translation_ = {0.0f, 0.0f, 0.0f};
 	worldTransformBody_.translation_ = {0.0f, 0.5f, 0.0f};
-	worldTransform_.scale_ = {0.5f, 0.5f, 0.5f};
+	worldTransform_.scale_ = {0.7f, 0.7f, 0.7f};
 
 	worldTransform_.UpdateMatrix();
 	worldTransformBody_.UpdateMatrix();
@@ -82,5 +82,7 @@ void LittleEnemy::SetSclae(const Vector3& scale) { worldTransform_.scale_ = scal
 void LittleEnemy::SetIsGetCaught(const bool is) { isGetCaughtUp_ = is; }
 
 void LittleEnemy::SetPosition(const Vector3& pos) { worldTransform_.translation_ = pos; }
+
+void LittleEnemy::SetBodyPosition(const Vector3& pos) { worldTransformBody_.translation_ = pos; }
 
 void LittleEnemy::SetTargetPosision(const Vector3& target) { targetPosition_ = target; }

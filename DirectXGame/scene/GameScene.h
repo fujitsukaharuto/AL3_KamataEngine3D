@@ -64,6 +64,8 @@ public: // メンバ関数
 	/// </summary>
 	void CheckAllCollisions();
 
+	void BlackMove();
+
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
@@ -79,9 +81,22 @@ private: // メンバ変数
 	std::optional<SceneType> sceneTypeRequest_ = std::nullopt;
 
 	uint32_t sceneChangeTimer_ = 0;
+	uint32_t stiffnessTimer_ = 0;
 	bool isSceneChange_ = false;
 	bool isClear_ = false;
 	bool isGameover_ = false;
+
+	uint32_t titleHandle_ = 0;
+	Sprite* titleSrite_;
+
+	uint32_t blackHandle_ = 0;
+	Sprite* blackSrite_;
+
+	uint32_t gameClearHandle_ = 0;
+	Sprite* gameClearSrite_;
+
+	uint32_t gameOverHandle_ = 0;
+	Sprite* gameOverSrite_;
 
 	/// <summary>
 	/// ゲームシーン用
@@ -115,5 +130,8 @@ private: // メンバ変数
 
 	std::unique_ptr<Model> groundModel_ = nullptr;
 	std::unique_ptr<Ground> ground_;
+
+
+	uint32_t AButtonSound_ = 0;
 
 };

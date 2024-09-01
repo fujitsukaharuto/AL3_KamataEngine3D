@@ -41,8 +41,9 @@ void StandbyOperation::TypeInitialize(const int type) {
 	} else {
 		type_ = type;
 
-		worldTransform_.scale_ = {2.0f, 0.05f, 2.0f};
+		worldTransform_.scale_ = {2.5f, 0.05f, 2.5f};
 		worldTransform_.rotation_ = {0.0f, 0.0f, 0.0f};
+		color_.SetColor({1.0f, 0.0f, 0.0f, 1.0f});
 
 		worldTransform_.UpdateMatrix();
 	}

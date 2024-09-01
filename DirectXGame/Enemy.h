@@ -69,6 +69,8 @@ public:
 
 	uint32_t GetLifeCount() { return lifeCount_; }
 
+	bool IsEndEnemy() { return endEnemy_; }
+
 private:
 
 	WorldTransform worldTransformBody_;
@@ -98,5 +100,12 @@ private:
 	uint32_t lifeCount_ = 300;
 	uint32_t hpTexture_ = 0;
 	Sprite* hpSprite_;
+
+	bool endEnemy_ = false;
+	uint32_t endTime_ = 0;
+
+
+	uint32_t damageSound_ = 0;
+	uint32_t bigDamageSound_ = 0;
 
 };
