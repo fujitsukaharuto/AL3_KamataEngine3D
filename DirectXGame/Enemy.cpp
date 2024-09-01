@@ -35,6 +35,8 @@ Enemy::~Enemy() {
 	}
 
 	delete hpSprite_;
+	delete hpFrameSprite_;
+	delete nameSprite_;
 
 }
 
@@ -81,8 +83,16 @@ void Enemy::Initialize(const std::vector<Model*>& models)
 	attackTypeRequest_ = AttackType::kDefault;
 
 	hpTexture_ = TextureManager::Load("white1x1.png");
-	hpSprite_ = Sprite::Create(hpTexture_, {320.0f, 50.0f}, {1.0f, 0.0f, 0.0f, 1.0f});
+	hpSprite_ = Sprite::Create(hpTexture_, {320.0f, 70.0f}, {1.0f, 0.0f, 0.0f, 1.0f});
 	hpSprite_->SetSize({640.0f, 15.0f});
+
+	hpFrameTexture_ = TextureManager::Load("white1x1.png");
+	hpFrameSprite_ = Sprite::Create(hpTexture_, {300.0f, 60.0f}, {0.412f, 0.412f, 0.412f, 1.0f});
+	hpFrameSprite_->SetSize({680.0f, 35.0f});
+
+	nameTexture_ = TextureManager::Load("enemyName.png");
+	nameSprite_ = Sprite::Create(nameTexture_, {473.0f, 0.0f});
+
 
 	bigDamageSound_ = Audio::GetInstance()->LoadWave("bigDamage.mp3");
 	damageSound_ = Audio::GetInstance()->LoadWave("whip.mp3");
@@ -98,7 +108,7 @@ void Enemy::SceneReset() {
 		attackZone->SetDisappear();
 	}
 
-	lifeCount_ = 400;
+	lifeCount_ = 450;
 	isStandby_ = false;
 	attackCooltime_ = 300;
 	attackType_ = AttackType::kSummon;
@@ -118,6 +128,8 @@ void Enemy::SceneReset() {
 
 	endEnemy_ = false;
 	endTime_ = 0;
+
+	hpSprite_->SetSize({640.0f, 15.0f});
 
 }
 
@@ -285,7 +297,9 @@ void Enemy::Draw(const ViewProjection& viewProjection)
 
 void Enemy::DrawSprite() {
 
+	hpFrameSprite_->Draw();
 	hpSprite_->Draw();
+	nameSprite_->Draw();
 
 }
 
@@ -470,11 +484,11 @@ void Enemy::OnCollision([[maybe_unused]] Collider* other) {
 
 				lifeCount_ -= 1;
 
-				if (lifeCount_ > 400) {
+				if (lifeCount_ > 450) {
 					lifeCount_ = 0;
 				}
 
-				float newSize = 640.0f * (lifeCount_ / 400.0f);
+				float newSize = 640.0f * (lifeCount_ / 450.0f);
 				if (newSize <= 0.0f) {
 					newSize = 0.0f;
 				}
@@ -484,11 +498,11 @@ void Enemy::OnCollision([[maybe_unused]] Collider* other) {
 			} else {
 				lifeCount_ -= static_cast<int>(other->GetRadius() * 5.0f) * 4;
 
-				if (lifeCount_ > 400) {
+				if (lifeCount_ > 450) {
 					lifeCount_ = 0;
 				}
 
-				float newSize = 640.0f * (lifeCount_ / 400.0f);
+				float newSize = 640.0f * (lifeCount_ / 450.0f);
 				if (newSize <= 0.0f) {
 					newSize = 0.0f;
 				}
@@ -496,15 +510,14 @@ void Enemy::OnCollision([[maybe_unused]] Collider* other) {
 				Audio::GetInstance()->PlayWave(bigDamageSound_, false, 0.3f);
 			}
 		}
-	}
-	if (lifeCount_ == 0) {
-	
-		endTime_ = 120;
-		endEnemy_ = false;
-		Audio::GetInstance()->PlayWave(deathSound_, false, 0.3f);
 
-	}
+		if (lifeCount_ == 0) {
 
+			endTime_ = 120;
+			endEnemy_ = false;
+			Audio::GetInstance()->PlayWave(deathSound_, false, 0.3f);
+		}
+	}
 }
 
 Vector3 Enemy::GetCenterPosition() const {

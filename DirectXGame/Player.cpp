@@ -100,8 +100,8 @@ void Player::Initialize(const std::vector<Model*>& models) {
 	YButtonHandle_ = TextureManager::Load("tutolialEnd.png");
 	hpHandle_ = TextureManager::Load("hp.png");
 
-	AbuttonSprite_ = Sprite::Create(AbuttonHandle_, {200.0f, 90.0f});
-	StickSprite_ = Sprite::Create(StickHandle_, {700.0f, 90.0f});
+	AbuttonSprite_ = Sprite::Create(AbuttonHandle_, {200.0f, 130.0f});
+	StickSprite_ = Sprite::Create(StickHandle_, {700.0f, 130.0f});
 	RBButtonSprite_ = Sprite::Create(RBButtonHandle_, {950.0f, 550.0f});
 	YButtonSprite_ = Sprite::Create(YButtonHandle_, {950.f, 620.0f});
 	for (uint32_t i = 0; i < lifeCount_; i++) {

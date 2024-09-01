@@ -111,6 +111,8 @@ void GameScene::Update() {
 		sceneType_ = sceneTypeRequest_.value();
 		switch (sceneType_) {
 		case SceneType::title:
+			audio_->StopWave(roopStopHandle_);
+
 			for (std::unique_ptr<Enemy>& enemy : enemies_) {
 				enemy->SceneReset();
 			}
@@ -142,13 +144,13 @@ void GameScene::Update() {
 		case SceneType::gameClear:
 
 			audio_->StopWave(roopStopHandle_);
-			audio_->PlayWave(clearSound_, false, 0.4f);
+			roopStopHandle_ = audio_->PlayWave(clearSound_, false, 0.4f);
 
 			break;
 		case SceneType::gameOver:
 
 			audio_->StopWave(roopStopHandle_);
-			audio_->PlayWave(overSound_, false, 0.4f);
+			roopStopHandle_ = audio_->PlayWave(overSound_, false, 0.4f);
 
 			break;
 		default:

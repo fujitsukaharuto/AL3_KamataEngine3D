@@ -105,6 +105,13 @@ private:
 	uint32_t endTime_ = 0;
 
 
+	uint32_t hpFrameTexture_ = 0;
+	Sprite* hpFrameSprite_;
+
+	uint32_t nameTexture_ = 0;
+	Sprite* nameSprite_;
+
+
 	uint32_t damageSound_ = 0;
 	uint32_t bigDamageSound_ = 0;
 	uint32_t deathSound_ = 0;
