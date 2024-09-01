@@ -22,7 +22,7 @@ void GameScene::Initialize() {
 	audio_ = Audio::GetInstance();
 
 	debugCamera_ = std::make_unique<DebugCamera>(1280, 720);
-	AxisIndicator::GetInstance()->SetVisible(true);
+	AxisIndicator::GetInstance()->SetVisible(false);
 
 	viewProject_.Initialize();
 	AxisIndicator::GetInstance()->SetTargetViewProjection(&viewProject_);
