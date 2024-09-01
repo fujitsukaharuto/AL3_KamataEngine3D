@@ -107,5 +107,5 @@ private:
 
 	uint32_t damageSound_ = 0;
 	uint32_t bigDamageSound_ = 0;
-
+	uint32_t deathSound_ = 0;
 };

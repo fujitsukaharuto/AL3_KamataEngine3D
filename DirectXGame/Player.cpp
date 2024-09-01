@@ -109,7 +109,8 @@ void Player::Initialize(const std::vector<Model*>& models) {
 	}
 
 
-	DamageSound_ = Audio::GetInstance()->LoadWave("damaged1.mp3");
+	hitSound_ = Audio::GetInstance()->LoadWave("damaged1.mp3");
+	DethSound_ = Audio::GetInstance()->LoadWave("powerdown.mp3");
 
 }
 
@@ -795,7 +796,7 @@ void Player::OnCollision([[maybe_unused]] Collider* other) {
 
 			if (invincibilityTime_ == 0 && lifeCount_ > 0) {
 				lifeCount_--;
-				Audio::GetInstance()->PlayWave(DamageSound_, false, 0.3f);
+				Audio::GetInstance()->PlayWave(hitSound_, false, 0.3f);
 				if (lifeCount_ > 4) {
 					lifeCount_ = 0;
 				}
@@ -822,6 +823,7 @@ void Player::OnCollision([[maybe_unused]] Collider* other) {
 
 			endPlayer_ = false;
 			endTime_ = 120;
+			Audio::GetInstance()->PlayWave(DethSound_, false, 0.3f);
 		}
 
 	}

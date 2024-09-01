@@ -86,7 +86,7 @@ void Enemy::Initialize(const std::vector<Model*>& models)
 
 	bigDamageSound_ = Audio::GetInstance()->LoadWave("bigDamage.mp3");
 	damageSound_ = Audio::GetInstance()->LoadWave("whip.mp3");
-
+	deathSound_ = Audio::GetInstance()->LoadWave("launchers.mp3");
 }
 
 void Enemy::SceneReset() {
@@ -463,45 +463,45 @@ void Enemy::Attack() {
 
 void Enemy::OnCollision([[maybe_unused]] Collider* other) {
 
-	uint32_t typeID = other->GetTypeID();
-	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kSnowBall)) {
-		if (other->GetRadius() <= 0.8f) {
+	if (lifeCount_ > 0) {
+		uint32_t typeID = other->GetTypeID();
+		if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kSnowBall)) {
+			if (other->GetRadius() <= 0.8f) {
 
-			lifeCount_ -= 1;
+				lifeCount_ -= 1;
 
-			if (lifeCount_ > 400) {
-				lifeCount_ = 0;
+				if (lifeCount_ > 400) {
+					lifeCount_ = 0;
+				}
+
+				float newSize = 640.0f * (lifeCount_ / 400.0f);
+				if (newSize <= 0.0f) {
+					newSize = 0.0f;
+				}
+				hpSprite_->SetSize({newSize, 15.0f});
+				Audio::GetInstance()->PlayWave(damageSound_, false, 0.05f);
+
+			} else {
+				lifeCount_ -= static_cast<int>(other->GetRadius() * 5.0f) * 4;
+
+				if (lifeCount_ > 400) {
+					lifeCount_ = 0;
+				}
+
+				float newSize = 640.0f * (lifeCount_ / 400.0f);
+				if (newSize <= 0.0f) {
+					newSize = 0.0f;
+				}
+				hpSprite_->SetSize({newSize, 15.0f});
+				Audio::GetInstance()->PlayWave(bigDamageSound_, false, 0.3f);
 			}
-
-			float newSize = 640.0f * (lifeCount_ / 400.0f);
-			if (newSize <= 0.0f) {
-				newSize = 0.0f;
-			}
-			hpSprite_->SetSize({newSize, 15.0f});
-			Audio::GetInstance()->PlayWave(damageSound_, false, 0.05f);
-
-
-		} else {
-			lifeCount_ -= static_cast<int>(other->GetRadius() * 5.0f) * 4;
-
-			if (lifeCount_ > 400) {
-				lifeCount_ = 0;
-			}
-
-			float newSize = 640.0f * (lifeCount_ / 400.0f);
-			if (newSize <= 0.0f) {
-				newSize = 0.0f;
-			}
-			hpSprite_->SetSize({newSize, 15.0f});
-			Audio::GetInstance()->PlayWave(bigDamageSound_, false, 0.3f);
-
 		}
 	}
-
 	if (lifeCount_ == 0) {
 	
 		endTime_ = 120;
 		endEnemy_ = false;
+		Audio::GetInstance()->PlayWave(deathSound_, false, 0.3f);
 
 	}
 

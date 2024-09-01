@@ -98,7 +98,9 @@ void GameScene::Initialize() {
 
 
 	AButtonSound_ = audio_->LoadWave("ASound.mp3");
-
+	clearSound_ = audio_->LoadWave("clearSE.mp3");
+	overSound_ = audio_->LoadWave("overSE.mp3");
+	bgmSound_ = audio_->LoadWave("BGM.mp3");;
 }
 
 void GameScene::Update() {
@@ -134,11 +136,19 @@ void GameScene::Update() {
 			collisionManager_->Reset();
 			followCamera_->Reset();
 
+			roopStopHandle_ = audio_->PlayWave(bgmSound_, true, 0.3f);
+
 			break;
 		case SceneType::gameClear:
 
+			audio_->StopWave(roopStopHandle_);
+			audio_->PlayWave(clearSound_, false, 0.4f);
+
 			break;
 		case SceneType::gameOver:
+
+			audio_->StopWave(roopStopHandle_);
+			audio_->PlayWave(overSound_, false, 0.4f);
 
 			break;
 		default:

@@ -133,5 +133,10 @@ private: // メンバ変数
 
 
 	uint32_t AButtonSound_ = 0;
+	uint32_t clearSound_ = 0;
+	uint32_t overSound_ = 0;
+	uint32_t bgmSound_ = 0;
+
+	uint32_t roopStopHandle_ = 0;
 
 };

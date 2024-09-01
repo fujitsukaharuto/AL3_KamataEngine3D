@@ -227,6 +227,7 @@ private:
 	Sprite* hpSprite_[4];
 
 
-	uint32_t DamageSound_ = 0;
+	uint32_t hitSound_ = 0;
+	uint32_t DethSound_ = 0;
 
 };
