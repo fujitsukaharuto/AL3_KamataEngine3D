@@ -24,30 +24,36 @@ void Effect::Initialize() {
 void Effect::SceneReset() {
 
 	for (Particle* particle : particles_) {
-		particle->setDeath();
+		delete particle;
 	}
+
+	particles_.clear();
 
 }
 
 void Effect::Update() {
 
-	particles_.remove_if([](Particle* particle) {
-		if (particle->IsDead()) {
-			delete particle;
-			return true;
-		}
-		return false;
-	});
+	if (particles_.size() != 0) {
+		particles_.remove_if([](Particle* particle) {
+			if (particle->IsDead()) {
+				delete particle;
+				return true;
+			}
+			return false;
+		});
 
-	for (Particle* particle : particles_) {
-		particle->Update();
+		for (Particle* particle : particles_) {
+			particle->Update();
+		}
 	}
 
 }
 
 void Effect::Draw(const ViewProjection& viewProjection) {
-	for (Particle* particle : particles_) {
-		particle->Draw(viewProjection);
+	if (particles_.size() != 0) {
+		for (Particle* particle : particles_) {
+			particle->Draw(viewProjection);
+		}
 	}
 }
 
